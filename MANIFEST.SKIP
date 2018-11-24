@@ -1,5 +1,6 @@
 \.o$
 \.obj$
+\.bs$
 WEBP\.c$
 Makefile
 MYMETA\.*

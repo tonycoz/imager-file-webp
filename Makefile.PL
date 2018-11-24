@@ -107,7 +107,7 @@ my %probe =
   (
    name => "WEBP",
    inccheck => sub { -e File::Spec->catfile($_[0], "webp/mux.h") },
-   libbase => "webp",
+   libbase => "webpmux",
    testcode => _webp_test_code(),
    testcodeheaders => [ "webp/mux.h", "stdio.h", "string.h" ],
    incpath => \@incpaths,

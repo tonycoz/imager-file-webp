@@ -4,5 +4,6 @@ inc/Devel/CheckLib.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
 t/00use.t
+t/10version.t
 WEBP.pm
 WEBP.xs

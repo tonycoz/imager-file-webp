@@ -22,5 +22,10 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 }
 
 char const * i_webp_libversion(void) {
-  return "";
+  static char buf[80];
+  if (!*buf) {
+    unsigned int mux_ver = WebPGetMuxVersion();
+    sprintf(buf, "mux %d.%d.%d (%x)", mux_ver >> 16, (mux_ver >> 8) & 0xFF, mux_ver & 0xFF, mux_ver);
+  }
+  return buf;
 }
