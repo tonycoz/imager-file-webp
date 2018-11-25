@@ -1,18 +1,145 @@
 #include "imwebp.h"
 #include "webp/mux.h"
 #include "webp/encode.h"
+#include "webp/decode.h"
 #include "imext.h"
 #include <errno.h>
 
+#define START_SLURP_SIZE 8192
+#define next_slurp_size(old) ((size_t)((old) * 3 / 2) + 10)
+
+static unsigned char *
+slurpio(io_glue *ig, size_t *size) {
+  size_t alloc_size = START_SLURP_SIZE;
+  unsigned char *data = mymalloc(alloc_size);
+  ssize_t rdsize = i_io_read(ig, data, alloc_size);
+
+  *size = 0;
+  while (rdsize > 0) {
+    *size += rdsize;
+    if (alloc_size < START_SLURP_SIZE + *size) {
+      size_t new_alloc = next_slurp_size(alloc_size);
+      data = myrealloc(data, new_alloc);
+      alloc_size = new_alloc;
+    }
+    rdsize = i_io_read(ig, data+*size, (alloc_size - *size));
+  }
+
+  if (rdsize < 0) {
+    i_push_error(errno, "failed to read");
+    myfree(data);
+    return NULL;
+  }
+
+  /* maybe free up some space */
+  data = myrealloc(data, *size);
+
+  return data;
+}
+
+static i_img *
+get_image(WebPMux *mux, int n, int *error) {
+  WebPMuxFrameInfo f;
+  WebPMuxError err;
+  WebPBitstreamFeatures feat;
+  VP8StatusCode code;
+  i_img *img;
+
+  *error = 0;
+  if ((err = WebPMuxGetFrame(mux, n, &f)) != WEBP_MUX_OK) {
+    if (err != WEBP_MUX_NOT_FOUND) {
+      i_push_errorf(err, "failed to read %d", (int)err);
+      *error = 1;
+    }
+    return NULL;
+  }
+
+  if ((code = WebPGetFeatures(f.bitstream.bytes, f.bitstream.size, &feat))
+      != VP8_STATUS_OK) {
+    i_push_errorf((int)code, "failed to get features (%d)", (int)code);
+    return NULL;
+  }
+
+  if (feat.has_alpha) {
+    i_push_error(0, "alpha not supported yet");
+    *error = 1;
+    return NULL;
+  }
+  else {
+    int width, height;
+    int y;
+    uint8_t *bmp = WebPDecodeRGB(f.bitstream.bytes, f.bitstream.size,
+				 &width, &height);
+    uint8_t *p = bmp;
+    if (!bmp) {
+      i_push_error(0, "failed to decode");
+      *error = 1;
+      return NULL;
+    }
+    img = i_img_8_new(width, height, 3);
+    for (y = 0; y < height; ++y) {
+      i_psamp(img, 0, width, y, p, NULL, 3);
+      p += width * 3;
+    }
+    WebPFree(bmp);
+  }
+  
+  return img;
+}
+
 i_img *
-i_readwebp(io_glue *ig, int allow_incomplete, int page) {
+i_readwebp(io_glue *ig, int page) {
+  if (page != 1) {
+    i_push_error(0, "page not supported yet");
+    return NULL;
+  }
+
   return NULL;
 }
 
 i_img **
 i_readwebp_multi(io_glue *ig, int *count) {
+  WebPMux *mux;
+  i_img *img;
+  unsigned char *mdata;
+  WebPData data;
+  int n;
+  i_img **result = NULL;
+  int imgs_alloc = 0;
+  int error;
+
+  data.bytes = mdata = slurpio(ig, &data.size);
+  
+  mux = WebPMuxCreate(&data, 0);
+
+  if (!mux) {
+    myfree(mdata);
+    i_push_error(0, "Cannot create mux object.  ABI mismatch?");
+    return NULL;
+  }
+
+  n = 1;
+  img = get_image(mux, n++, &error);
   *count = 0;
+  while (img) {
+    if (*count == imgs_alloc) {
+      imgs_alloc += 10;
+      result = myrealloc(result, imgs_alloc * sizeof(i_img *));
+    }
+    result[(*count)++] = img;
+    img = get_image(mux, n++, &error);
+  }
+
+  WebPMuxDelete(mux);
+  myfree(mdata);
+  
+  return result;
+#if 0
+ fail:
+  myfree(data);
+  WebPMuxDelete(mux);
   return NULL;
+#endif
 }
 
 undef_int
@@ -70,6 +197,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 
   if (!mux) {
     i_push_error(0, "Cannot create mux object.  ABI mismatch?");
+    return 0;
   }
 
   if (count == 1) {

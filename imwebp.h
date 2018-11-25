@@ -3,7 +3,7 @@
 
 #include "imdatatypes.h"
 
-i_img   * i_readwebp(io_glue *ig, int allow_incomplete, int page);
+i_img   * i_readwebp(io_glue *ig, int page);
 i_img  ** i_readwebp_multi(io_glue *ig, int *count);
 undef_int i_writewebp(i_img *im, io_glue *ig);
 undef_int i_writewebp_multi(io_glue *ig, i_img **imgs, int count);

@@ -14,9 +14,8 @@ DEFINE_IMAGER_CALLBACKS;
 MODULE = Imager::File::WEBP  PACKAGE = Imager::File::WEBP
 
 Imager::ImgRaw
-i_readwebp(ig, allow_incomplete=0, page=0)
+i_readwebp(ig, page=0)
         Imager::IO     ig
-	       int     allow_incomplete
                int     page
 
 void
