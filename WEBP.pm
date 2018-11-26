@@ -121,7 +121,9 @@ TODO:
 
 =item * parse EXIF metadata
 
-=item * error handling tests
+=item * error handling tests (and probably implementation)
+
+=item * image size limit checks
 
 =back
 
