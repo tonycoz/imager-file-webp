@@ -81,22 +81,49 @@ __END__
 
 =head1 NAME
 
-Imager::File::TIFF - read and write TIFF files
+Imager::File::WEBP - read and write WEBP files
 
 =head1 SYNOPSIS
 
   use Imager;
 
   my $img = Imager->new;
-  $img->read(file=>"foo.tiff")
+  $img->read(file=>"foo.webp")
     or die $img->errstr;
 
-  $img->write(file => "foo.tif")
+  # type won't be necessary if the extension is webp from Imager 1.008
+  $img->write(file => "foo.webp", type => "webp")
     or die $img->errstr;
 
 =head1 DESCRIPTION
 
-Imager's TIFF support is documented in L<Imager::Files>.
+Implements .webp file support for Imager.
+
+So far this is very, very basic.  No tags are set when reading images
+and tags are ignored when writing.
+
+Due to the limitations of C<webp> grayscale images are written as RGB
+images.
+
+TODO:
+
+=over
+
+=item * lossless support
+
+=item * quality support for lossy
+
+=item * compression level support for lossless
+
+=item * tags for animation parameters on read
+
+=item * tags for animation parameters on write
+
+=item * parse EXIF metadata
+
+=item * error handling tests
+
+=back
 
 =head1 AUTHOR
 
