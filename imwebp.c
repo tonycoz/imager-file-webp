@@ -190,15 +190,16 @@ i_writewebp(i_img *im, io_glue *ig) {
 static const int gray_chans[3] = { 0, 0, 0 };
 
 static unsigned char *
-frame_raw(i_img *im) {
+frame_raw(i_img *im, int *out_chans) {
   unsigned char *data, *p;
   i_img_dim y;
   const int *chans = im->channels == 1 ? gray_chans : NULL;
-  data = mymalloc(im->xsize * im->ysize * 3);
+  *out_chans = (im->channels & 1) ? 3 : 4;
+  data = mymalloc(im->xsize * im->ysize * *out_chans);
   p = data;
   for (y = 0; y < im->ysize; ++y) {
-    i_gsamp(im, 0, im->xsize, y, p, chans, 3);
-    p += 3 * im->xsize;
+    i_gsamp(im, 0, im->xsize, y, p, chans, *out_chans);
+    p += *out_chans * im->xsize;
   }
 
   return data;
@@ -206,9 +207,16 @@ frame_raw(i_img *im) {
 
 unsigned char *
 frame_webp(i_img *im, size_t *sz) {
-  unsigned char *raw = frame_raw(im);
+  int chans;
+  unsigned char *raw = frame_raw(im, &chans);
   uint8_t *webp;
-  size_t webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * 3, 80, &webp);
+  size_t webp_size;
+  if (chans == 4) {
+    webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+  }
+  else {
+    webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+  }
   *sz = webp_size;
   myfree(raw);
   return webp;
@@ -222,7 +230,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   WebPMuxError err;
 
   for (i = 0; i < count; ++i) {
-    if (imgs[i]->channels != 3 && imgs[i]->channels != 1) {
+    if (imgs[i]->channels != 3 && imgs[i]->channels != 1 && imgs[i]->channels != 4) {
       i_push_error(0, "channels must be 1 or 3 for now");
       return 0;
     }
