@@ -13,7 +13,7 @@ my $head;
 read($fh, $head, 12) == 12
   or die "Cannot read RIFF header\n";
 
-my ($riff, $fsize, $webp) = unpack("A4L<A4", $head);
+my ($riff, $fsize, $webp) = unpack("a4L<a4", $head);
 print <<EOS;
 Header:
   RIFF: $riff
@@ -33,7 +33,7 @@ while (read($fh, $chead, 8) == 8) {
   print "Chunk: '$disp4cc' ($csize bytes)\n";
   if ($cfourcc eq 'VP8 ') {
     if ($csize >= 10) {
-      my ($ft, $mag, $width, $height) = unpack("A3A3S<S<", $cbody);
+      my ($ft, $mag, $width, $height) = unpack("a3a3S<S<", $cbody);
       $ft = "$ft\0";
       $ft = unpack("L<", $ft);
       my $frame_type = ($ft >> 23) & 1 ? "inter" : "key";
@@ -57,7 +57,50 @@ while (read($fh, $chead, 8) == 8) {
 EOS
     }
     else {
-      print " ** body tool small for 'VP8 '\n";
+      print " ** body too small for 'VP8 '\n";
+    }
+  }
+  elsif ($cfourcc eq 'VP8X') {
+    if ($csize >= 10) {
+      my ($flags, $res, $cwidth, $cheight) = unpack("Ca3a3a3", $cbody);
+      my $res_a = ($flags & 0xC0);
+      my $has_icc = ($flags & 0x20) ? "Yes" : "No";
+      my $has_alpha = ($flags & 0x10) ? "Yes" : "No";
+      my $has_exif = ($flags & 0x08) ? "Yes" : "No";
+      my $has_xmp = ($flags & 0x04) ? "Yes" : "No";
+      my $has_anim = ($flags & 0x02) ? "Yes" : "No";
+      my $res_b = ($flags & 0x01);
+      my $res_c = unpack("H*", $res);
+      $cwidth = unpack("L<", "$cwidth\0");
+      $cheight = unpack("L<", "$cheight\0");
+      print <<EOS;
+  Has ICC: $has_icc
+  Has Alpha: $has_alpha
+  Has EXIF: $has_exif
+  Has XMP: $has_xmp
+  Has Animation: $has_anim
+  Canvas Witdh: $cwidth + 1
+  Canvas Height: $cheight + 1
+  Reserved: $res_a  $res_b  $res_c
+EOS
+    }
+    else {
+      print " ** body too small for 'VP8X'\n";
+    }
+  }
+  elsif ($cfourcc eq 'ALPH') {
+    if ($csize > 1) {
+      my ($flags) = unpack("C", $cbody);
+      my $pre = ($flags & 0x30) >> 4;
+      my $filt = ($flags & 0xC0) >> 2;
+      my $comp = ($flags & 0x03);
+      my $leftover = $csize - 1;
+      print <<EOS;
+  Preprocessing: @{["None", "Level Reduction", "Unknown", "Unknown" ]}[$pre] ($pre)
+  Filtering: @{["predictor = 0", "predictor = A", "predictor = B", "predictor = clip(A+B-C)"]}[$filt] ($filt)
+  Compression: @{["None", "WebP Lossless", "Unknown", "Unknown" ]}[$comp] ($comp)
+  Alpha bytes: $leftover
+EOS
     }
   }
 }

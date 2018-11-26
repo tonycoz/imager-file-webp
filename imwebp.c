@@ -61,9 +61,22 @@ get_image(WebPMux *mux, int n, int *error) {
   }
 
   if (feat.has_alpha) {
-    i_push_error(0, "alpha not supported yet");
-    *error = 1;
-    return NULL;
+    int width, height;
+    int y;
+    uint8_t *bmp = WebPDecodeRGBA(f.bitstream.bytes, f.bitstream.size,
+				 &width, &height);
+    uint8_t *p = bmp;
+    if (!bmp) {
+      i_push_error(0, "failed to decode");
+      *error = 1;
+      return NULL;
+    }
+    img = i_img_8_new(width, height, 4);
+    for (y = 0; y < height; ++y) {
+      i_psamp(img, 0, width, y, p, NULL, 4);
+      p += width * 4;
+    }
+    WebPFree(bmp);
   }
   else {
     int width, height;
