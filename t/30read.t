@@ -49,4 +49,13 @@ SKIP:
   is_image_similar($im, alpha_test_image(), 2_000_000, "check for close match");
 }
 
+SKIP:
+{
+  Imager->set_file_limits(width => 100, height => 100);
+  ok(!$im->read(file => "testimg/simple.webp"),
+     "fail to read too large an image");
+  like($im->errstr, qr/image width/, "check message");
+}
+Imager->set_file_limits(reset => 1);
+
 done_testing();

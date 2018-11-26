@@ -61,6 +61,12 @@ get_image(WebPMux *mux, int n, int *error) {
     return NULL;
   }
 
+  if (!i_int_check_image_file_limits(feat.width, feat.height, feat.has_alpha ? 4 : 3, 1)) {
+    *error = 1;
+    WebPDataClear(&f.bitstream);
+    return NULL;
+  }
+
   if (feat.has_alpha) {
     int width, height;
     int y;
@@ -176,16 +182,27 @@ i_readwebp_multi(io_glue *ig, int *count) {
     img = get_image(mux, n++, &error);
   }
 
+  if (error) {
+    while (*count) {
+      --*count;
+      i_img_destroy(result[*count]);
+    }
+    myfree(result);
+    goto fail;
+  }
+  else if (*count == 0) {
+    i_push_error(0, "No images found");
+  }
+
   WebPMuxDelete(mux);
   myfree(mdata);
   
   return result;
-#if 0
+
  fail:
-  myfree(data);
   WebPMuxDelete(mux);
+  myfree(mdata);
   return NULL;
-#endif
 }
 
 undef_int
