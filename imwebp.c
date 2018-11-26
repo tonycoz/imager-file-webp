@@ -101,6 +101,7 @@ get_image(WebPMux *mux, int n, int *error) {
   }
   WebPDataClear(&f.bitstream);
 
+  i_tags_set(&img->tags, "i_format", "webp", 4);
   
   return img;
 }

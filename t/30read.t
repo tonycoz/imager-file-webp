@@ -13,6 +13,8 @@ my $im = Imager->new;
   my @im = Imager->read_multi(file => "testimg/simple.webp", type => "webp");
   is(@im, 1, "read single image (using multi interface)");
   is_image_similar($im[0], test_image(), 2_000_000, "check for close match");
+  my ($format) = $im[0]->tags(name=>'i_format');
+  is($format, 'webp', "check i_format tag");
 }
 
 {
