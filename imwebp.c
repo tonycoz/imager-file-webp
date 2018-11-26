@@ -187,15 +187,18 @@ i_writewebp(i_img *im, io_glue *ig) {
   return i_writewebp_multi(ig, &im, 1);
 }
 
+static const int gray_chans[3] = { 0, 0, 0 };
+
 static unsigned char *
 frame_raw(i_img *im) {
   unsigned char *data, *p;
   i_img_dim y;
+  const int *chans = im->channels == 1 ? gray_chans : NULL;
   data = mymalloc(im->xsize * im->ysize * 3);
   p = data;
   for (y = 0; y < im->ysize; ++y) {
-    i_gsamp(im, 0, im->xsize, y, p, NULL, im->channels);
-    p += im->channels * im->xsize;
+    i_gsamp(im, 0, im->xsize, y, p, chans, 3);
+    p += 3 * im->xsize;
   }
 
   return data;
@@ -219,8 +222,8 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   WebPMuxError err;
 
   for (i = 0; i < count; ++i) {
-    if (imgs[i]->channels != 3) {
-      i_push_error(0, "channels must be 3 for now");
+    if (imgs[i]->channels != 3 && imgs[i]->channels != 1) {
+      i_push_error(0, "channels must be 1 or 3 for now");
       return 0;
     }
     if (imgs[i]->xsize > 16383) {
