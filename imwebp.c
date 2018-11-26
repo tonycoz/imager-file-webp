@@ -56,6 +56,7 @@ get_image(WebPMux *mux, int n, int *error) {
 
   if ((code = WebPGetFeatures(f.bitstream.bytes, f.bitstream.size, &feat))
       != VP8_STATUS_OK) {
+    WebPDataClear(&f.bitstream);
     i_push_errorf((int)code, "failed to get features (%d)", (int)code);
     return NULL;
   }
@@ -67,6 +68,7 @@ get_image(WebPMux *mux, int n, int *error) {
 				 &width, &height);
     uint8_t *p = bmp;
     if (!bmp) {
+      WebPDataClear(&f.bitstream);
       i_push_error(0, "failed to decode");
       *error = 1;
       return NULL;
@@ -85,6 +87,7 @@ get_image(WebPMux *mux, int n, int *error) {
 				 &width, &height);
     uint8_t *p = bmp;
     if (!bmp) {
+      WebPDataClear(&f.bitstream);
       i_push_error(0, "failed to decode");
       *error = 1;
       return NULL;
@@ -96,6 +99,8 @@ get_image(WebPMux *mux, int n, int *error) {
     }
     WebPFree(bmp);
   }
+  WebPDataClear(&f.bitstream);
+
   
   return img;
 }
