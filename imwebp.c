@@ -211,7 +211,7 @@ frame_raw(i_img *im, int *out_chans) {
   return data;
 }
 
-unsigned char *
+static unsigned char *
 frame_webp(i_img *im, size_t *sz) {
   int chans;
   unsigned char *raw = frame_raw(im, &chans);
@@ -300,7 +300,8 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   return 0;
 }
 
-char const * i_webp_libversion(void) {
+char const *
+i_webp_libversion(void) {
   static char buf[80];
   if (!*buf) {
     unsigned int mux_ver = WebPGetMuxVersion();
