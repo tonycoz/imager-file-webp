@@ -187,13 +187,13 @@ i_writewebp(i_img *im, io_glue *ig) {
   return i_writewebp_multi(ig, &im, 1);
 }
 
-static const int gray_chans[3] = { 0, 0, 0 };
+static const int gray_chans[4] = { 0, 0, 0, 1 };
 
 static unsigned char *
 frame_raw(i_img *im, int *out_chans) {
   unsigned char *data, *p;
   i_img_dim y;
-  const int *chans = im->channels == 1 ? gray_chans : NULL;
+  const int *chans = im->channels < 3 ? gray_chans : NULL;
   *out_chans = (im->channels & 1) ? 3 : 4;
   data = mymalloc(im->xsize * im->ysize * *out_chans);
   p = data;
@@ -230,10 +230,6 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   WebPMuxError err;
 
   for (i = 0; i < count; ++i) {
-    if (imgs[i]->channels != 3 && imgs[i]->channels != 1 && imgs[i]->channels != 4) {
-      i_push_error(0, "channels must be 1 or 3 for now");
-      return 0;
-    }
     if (imgs[i]->xsize > 16383) {
       i_push_error(0, "maximum webp image width is 16383");
       return 0;

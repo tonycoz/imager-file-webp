@@ -49,4 +49,20 @@ SKIP:
   is_image_similar($im2, $im, 2_000_000, "check it's similar");
 }
 
+SKIP:
+{
+  my $im = alpha_test_image()->convert(preset => "gray");
+  my $data;
+  ok($im->write(data => \$data, type => "webp"),
+     "write alpha image")
+    or skip "Failed to write gray with alpha", 1;
+  my $im2 = Imager->new;
+  ok($im2->read(data => \$data, type => "webp"),
+     "read it back in")
+    or skip "Failed to read it", 1;
+  my $check = $im->convert(preset => "rgb");
+  is($check->getchannels, 4, "check \$check channels");
+  is_image_similar($im2, $check, 2_000_000, "check it's similar");
+}
+
 done_testing();
