@@ -17,12 +17,9 @@ Imager->register_reader
    sub { 
      my ($im, $io, %hsh) = @_;
 
-     my $allow_incomplete = $hsh{allow_incomplete};
-     defined $allow_incomplete or $allow_incomplete = 0;
-
      my $page = $hsh{page};
      defined $page or $page = 0;
-     $im->{IMG} = i_readwebp($io, $allow_incomplete, $page);
+     $im->{IMG} = i_readwebp($io, $page);
 
      unless ($im->{IMG}) {
        $im->_set_error(Imager->_error_as_msg);

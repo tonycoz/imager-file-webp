@@ -27,6 +27,24 @@ my $im = Imager->new;
   is_image_similar($im[1], alpha_test_image(), 2_000_000, "check for close match");
 }
 
+SKIP:
+{
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/simple.webp", type => "webp"),
+     "read simple using single interface")
+    or skip("No image read", 1);
+  is_image_similar($im, test_image(), 2_000_000, "check for close match");
+}
+
+SKIP:
+{
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/anim.webp", type => "webp", page => 1),
+     "read anim second image using single interface")
+    or skip("No image read", 1);
+  is_image_similar($im, alpha_test_image(), 2_000_000, "check for close match");
+}
+
 sub alpha_test_image {
   my $check = Imager->new(xsize => 20, ysize => 20, channels => 4);
   $check->box(xmax => 9, color => [ 0, 0, 255, 128], filled => 1);

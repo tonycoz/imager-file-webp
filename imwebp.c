@@ -102,12 +102,39 @@ get_image(WebPMux *mux, int n, int *error) {
 
 i_img *
 i_readwebp(io_glue *ig, int page) {
-  if (page != 1) {
-    i_push_error(0, "page not supported yet");
+  WebPMux *mux;
+  i_img *img;
+  unsigned char *mdata;
+  WebPData data;
+  int n;
+  int imgs_alloc = 0;
+  int error;
+
+  i_clear_error();
+  if (page < 0) {
+    i_push_error(0, "page must be non-negative");
     return NULL;
   }
 
-  return NULL;
+  data.bytes = mdata = slurpio(ig, &data.size);
+  
+  mux = WebPMuxCreate(&data, 0);
+
+  if (!mux) {
+    myfree(mdata);
+    i_push_error(0, "Cannot create mux object.  ABI mismatch?");
+    return NULL;
+  }
+
+  img = get_image(mux, page+1, &error);
+  if (img == NULL && !error) {
+    i_push_error(0, "No such image");
+  }
+
+  WebPMuxDelete(mux);
+  myfree(mdata);
+  
+  return img;
 }
 
 i_img **
