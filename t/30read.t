@@ -4,6 +4,8 @@ use Test::More;
 
 use Imager::File::WEBP;
 use Imager::Test qw(test_image is_image_similar);
+use lib 't/lib';
+use TestImage qw(alpha_test_image);
 
 my $im = Imager->new;
 
@@ -43,13 +45,6 @@ SKIP:
      "read anim second image using single interface")
     or skip("No image read", 1);
   is_image_similar($im, alpha_test_image(), 2_000_000, "check for close match");
-}
-
-sub alpha_test_image {
-  my $check = Imager->new(xsize => 20, ysize => 20, channels => 4);
-  $check->box(xmax => 9, color => [ 0, 0, 255, 128], filled => 1);
-  $check->box(xmin => 10, color => [ 255, 255, 0, 192 ], filled => 1);
-  $check;
 }
 
 done_testing();
