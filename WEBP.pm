@@ -123,8 +123,6 @@ TODO:
 
 =item * error handling tests (and probably implementation)
 
-=item * image size limit checks
-
 =back
 
 =head1 AUTHOR
