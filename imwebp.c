@@ -134,7 +134,7 @@ i_readwebp(io_glue *ig, int page) {
 
   if (!mux) {
     myfree(mdata);
-    i_push_error(0, "Cannot create mux object.  ABI mismatch?");
+    i_push_error(0, "Cannot create mux object.  Bad file?");
     return NULL;
   }
 

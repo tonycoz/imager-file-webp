@@ -49,7 +49,21 @@ SKIP:
   is_image_similar($im, alpha_test_image(), 2_000_000, "check for close match");
 }
 
-SKIP:
+{
+  my $im = Imager->new;
+  open my $fh, "<:raw", "testimg/simple.webp"
+    or die;
+  my $data = do { local $/; <$fh> };
+  my $bad = $data;
+  substr($bad, -100) = ''; # truncate it
+  print "# ", length $data, "\n";
+  print "# ", length $bad, "\n";
+  ok(!$im->read(data => \$bad, type => "webp"),
+     "fail to read truncated file");
+  print "# ", $im->errstr, "\n";
+  $im->write(file => "bad.png");
+}
+
 {
   Imager->set_file_limits(width => 100, height => 100);
   ok(!$im->read(file => "testimg/simple.webp"),
