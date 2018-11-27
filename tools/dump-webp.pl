@@ -41,10 +41,12 @@ sub do_dump {
 	my ($ft, $mag, $width, $height) = unpack("a3a3S<S<", $cbody);
 	$ft = "$ft\0";
 	$ft = unpack("L<", $ft);
-	my $frame_type = ($ft >> 23) & 1 ? "inter" : "key";
-	my $version = ($ft >> 20) & 7;
-	my $show_frame = ($ft >> 19) & 1;
-	$ft &= 0x7FFFF;
+
+	my $frame_type = ($ft & 1) ? "inter" : "key";
+	my $version = ($ft >> 1) & 7;
+	my $show_frame = ($ft >> 4) & 1;
+	$ft = $ft >> 5;
+
 	my $mag_status = ($mag eq "\x9d\x01\x2a") ? "Good" : "Bad";
 	my $disp_mag = unpack "H*", $mag;
 	my $hscale = ($width >> 14) & 3;
