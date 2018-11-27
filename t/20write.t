@@ -3,7 +3,7 @@ use strict;
 use Test::More;
 
 use Imager::File::WEBP;
-use Imager::Test qw(test_image is_image_similar);
+use Imager::Test qw(test_image is_image_similar is_image);
 use lib 't/lib';
 use TestImage qw(alpha_test_image);
 
@@ -63,6 +63,66 @@ SKIP:
   my $check = $im->convert(preset => "rgb");
   is($check->getchannels, 4, "check \$check channels");
   is_image_similar($im2, $check, 2_000_000, "check it's similar");
+}
+
+SKIP:
+{
+  my $im = test_image();
+
+  my $data;
+  ok($im->write(data => \$data, type => "webp", webp_mode => "lossless"),
+     "write noalpha lossless")
+    or skip "couldn't write noalpha lossless", 1;
+  my $im2 = Imager->new;
+  ok($im2->read(data => \$data, type => "webp"), "read it back in")
+    or skip "couldn't read it back in", 1;
+  is_image($im2, $im, "lossless must match exactly");
+  is($im2->tags(name => "webp_mode"), "lossless", "check webp_mode set");
+}
+
+SKIP:
+{
+  my $im = alpha_test_image();
+  my $data;
+  ok($im->write(data => \$data, type => "webp", webp_mode => "lossless"),
+     "write alpha lossless")
+    or skip "couldn't write alpha lossless", 1;
+  my $im2 = Imager->new;
+  ok($im2->read(data => \$data, type => "webp"), "read it back in")
+    or skip "couldn't read it back in", 1;
+  is_image($im2, $im, "lossless must match exactly");
+  is($im2->tags(name => "webp_mode"), "lossless", "check webp_mode set");
+}
+
+{
+  my $im = test_image();
+  my $data;
+  ok(!$im->write(data => \$data, type => "webp", webp_mode => "invalid"),
+     "fail to write webp invalid mode");
+  like($im->errstr, qr/webp_mode must be 'lossy' or 'lossless'/,
+       "check error message");
+  print "# ", $im->errstr, "\n";
+}
+
+{
+  my @im = ( test_image(), test_image() );
+  my $data;
+  ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
+     "write two images");
+  my @im2 = Imager->read_multi(data => \$data, type => "webp");
+  is(@im2, 2, "read two images");
+  is_image_similar($im2[0], $im[0], 2_000_000, "check first image");
+  is_image_similar($im2[1], $im[1], 2_000_000, "check second image");
+}
+
+{
+  my @im = ( test_image(), test_image() );
+  $im[1]->settag(name => "webp_mode", value => "invalid");
+  my $data;
+  ok(!Imager->write_multi({ data => \$data, type => "webp" }, @im),
+     "write multiple with bad tag in second");
+  like(Imager->errstr, qr/webp_mode must be 'lossy' or 'lossless'/,
+       "check error message");
 }
 
 done_testing();

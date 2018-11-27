@@ -267,11 +267,33 @@ frame_webp(i_img *im, size_t *sz) {
   unsigned char *raw = frame_raw(im, &chans);
   uint8_t *webp;
   size_t webp_size;
-  if (chans == 4) {
-    webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+  char webp_mode[80];
+  int lossy = 1;
+
+  if (i_tags_get_string(&im->tags, "webp_mode", 0, webp_mode, sizeof(webp_mode))) {
+    if (strcmp(webp_mode, "lossless") == 0) {
+      lossy = 0;
+    }
+    else if (strcmp(webp_mode, "lossy") != 0) {
+      i_push_error(0, "webp_mode must be 'lossy' or 'lossless'");
+      return NULL;
+    }
+  }
+  if (lossy) {
+    if (chans == 4) {
+      webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+    }
+    else {
+      webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+    }
   }
   else {
-    webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+    if (chans == 4) {
+      webp_size = WebPEncodeLosslessRGBA(raw, im->xsize, im->ysize, im->xsize * chans, &webp);
+    }
+    else {
+      webp_size = WebPEncodeLosslessRGB(raw, im->xsize, im->ysize, im->xsize * chans, &webp);
+    }
   }
   *sz = webp_size;
   myfree(raw);
@@ -306,6 +328,9 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   if (count == 1) {
     WebPData d;
     d.bytes = frame_webp(imgs[0], &d.size);
+    if (!d.bytes)
+      goto fail;
+
     if ((err = WebPMuxSetImage(mux, &d, 1)) != WEBP_MUX_OK) {
       i_push_errorf(err, "failed to set image (%d)", (int)err);
       WebPDataClear(&d);
@@ -315,6 +340,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   }
   else {
     WebPMuxFrameInfo f;
+    WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
     f.x_offset = f.y_offset = 0;
     f.duration = 1000/30;
     f.id = WEBP_CHUNK_ANMF;
@@ -323,8 +349,16 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
     for (i = 0; i < count; ++i) {
       WebPData d;
       f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);
+      if (!f.bitstream.bytes)
+	goto fail;
+
       WebPMuxPushFrame(mux, &f, 1);
       WebPDataClear(&f.bitstream);
+    }
+    err = WebPMuxSetAnimationParams(mux, &params);
+    if (err != WEBP_MUX_OK) {
+      i_push_errorf((int)err, "failed to set animation params (%d)", (int)err);
+      goto fail;
     }
   }
 
@@ -335,6 +369,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 
   if (i_io_write(ig, outd.bytes, outd.size) != outd.size) {
     i_push_error(errno, "failed to write");
+    WebPDataClear(&outd);
     goto fail;
   }
   WebPDataClear(&outd);
