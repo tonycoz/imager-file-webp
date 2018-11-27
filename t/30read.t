@@ -40,6 +40,11 @@ my $im = Imager->new;
   is(@im, 2, "read 2 images with multi interface");
   is_image_similar($im[0], test_image(), 2_000_000, "check for close match");
   is_image_similar($im[1], alpha_test_image(), 2_000_000, "check for close match");
+
+  is($im[0]->tags(name => "webp_left"), 0, "first frame left");
+  is($im[1]->tags(name => "webp_left"), 20, "second frame left");
+  is($im[0]->tags(name => "webp_top"), 0, "first frame top");
+  is($im[1]->tags(name => "webp_top"), 30, "second frame top");
 }
 
 SKIP:

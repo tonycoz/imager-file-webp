@@ -137,6 +137,8 @@ get_image(WebPMux *mux, int n, int *error) {
   else {
     i_tags_set(&img->tags, "webp_mode", "lossy", 5);
   }
+  i_tags_setn(&img->tags, "webp_left", f.x_offset);
+  i_tags_setn(&img->tags, "webp_top", f.y_offset);
 
   WebPDataClear(&f.bitstream);
 

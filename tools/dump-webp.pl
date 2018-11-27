@@ -130,8 +130,8 @@ EOS
       if ($csize >= 16) {
 	my ($framex, $framey, $fwidth, $fheight, $dur, $flags) =
 	  unpack("a3a3a3a3a3C", $cbody);
-	$framex = unpack("L<", "$framex\0");
-	$framey = unpack("L<", "$framey\0");
+	$framex = unpack("L<", "$framex\0") * 2;
+	$framey = unpack("L<", "$framey\0") * 2;
 	$fwidth = unpack("L<", "$fwidth\0");
 	$fheight = unpack("L<", "$fheight\0");
 	$dur = unpack("L<", "$dur\0");
