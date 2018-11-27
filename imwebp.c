@@ -280,11 +280,21 @@ frame_webp(i_img *im, size_t *sz) {
     }
   }
   if (lossy) {
-    if (chans == 4) {
-      webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+    double quality;
+    if (i_tags_get_float(&im->tags, "webp_quality", 0, &quality)) {
+      if (quality < 0 || quality > 100) {
+	i_push_error(0, "webp_quality must be in the range 0 to 100 inclusive");
+	return NULL;
+      }
     }
     else {
-      webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, 80, &webp);
+      quality = 80;
+    }
+    if (chans == 4) {
+      webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, quality, &webp);
+    }
+    else {
+      webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, quality, &webp);
     }
   }
   else {

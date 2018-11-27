@@ -116,19 +116,26 @@ Possible values:
 
 =over
 
-=item C<lossy> - write in lossy mode.  This is the default.
+=item *
 
-=item C<lossless> - write in lossless mode.
+C<lossy> - write in lossy mode.  This is the default.
+
+=item *
+
+C<lossless> - write in lossless mode.
 
 =back
+
+=item *
+
+C<webp_quality> - the lossy compression quality, a floating point
+number from 0 (bad) to 100 (better).  Default: 80.
 
 =back
 
 TODO:
 
 =over
-
-=item * quality support for lossy
 
 =item * compression level support for lossless
 

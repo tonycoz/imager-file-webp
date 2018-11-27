@@ -125,4 +125,30 @@ SKIP:
        "check error message");
 }
 
+{
+  my $im = test_image();
+  my $data;
+  ok($im->write(data => \$data, type => "webp", webp_quality => 100),
+     "write with quality 100");
+  my $im100 = Imager->new;
+  ok($im100->read(data => \$data), "read it back");
+  $data = '';
+  ok($im->write(data => \$data, type => "webp", webp_quality => 70),
+     "write with quality 70");
+  my $im70 = Imager->new;
+  ok($im70->read(data => \$data), "read it back");
+  my $im70err = Imager::i_img_diff($im70->{IMG}, $im->{IMG});
+  my $im100err = Imager::i_img_diff($im100->{IMG}, $im->{IMG});
+  cmp_ok($im100err, '<', $im70err, "check 100 quality is 'better'");
+}
+
+{
+  my $im = test_image();
+  my $data;
+  ok(!$im->write(data => \$data, type => "webp", webp_quality => 101),
+     "fail to write with quality 101");
+  like($im->errstr, qr/webp_quality must be in the range 0 to 100 inclusive/,
+       "check message");
+}
+
 done_testing();
