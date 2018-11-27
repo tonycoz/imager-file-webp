@@ -107,12 +107,20 @@ SKIP:
 {
   my @im = ( test_image(), test_image() );
   my $data;
+  $im[0]->settag(name => "webp_left", value => 11);
+  $im[0]->settag(name => "webp_top", value => 6);
+  $im[1]->settag(name => "webp_left", value => 20);
+  $im[1]->settag(name => "webp_top", value => 8);
   ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
      "write two images");
   my @im2 = Imager->read_multi(data => \$data, type => "webp");
   is(@im2, 2, "read two images");
   is_image_similar($im2[0], $im[0], 2_000_000, "check first image");
   is_image_similar($im2[1], $im[1], 2_000_000, "check second image");
+  is($im2[0]->tags(name => "webp_left"), 10, "first image webp_left");
+  is($im2[0]->tags(name => "webp_top"), 6, "first image webp_top");
+  is($im2[1]->tags(name => "webp_left"), 20, "second image webp_left");
+  is($im2[1]->tags(name => "webp_top"), 8, "second image webp_top");
 }
 
 {

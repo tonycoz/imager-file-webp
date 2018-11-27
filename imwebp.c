@@ -353,13 +353,18 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   else {
     WebPMuxFrameInfo f;
     WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
-    f.x_offset = f.y_offset = 0;
     f.duration = 1000/30;
     f.id = WEBP_CHUNK_ANMF;
     f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
     f.blend_method = WEBP_MUX_NO_BLEND;
     for (i = 0; i < count; ++i) {
       WebPData d;
+
+      if (!i_tags_get_int(&imgs[i]->tags, "webp_left", 0, &f.x_offset))
+	f.x_offset = 0;
+      if (!i_tags_get_int(&imgs[i]->tags, "webp_top", 0, &f.y_offset))
+	f.y_offset = 0;
+      
       f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);
       if (!f.bitstream.bytes)
 	goto fail;
