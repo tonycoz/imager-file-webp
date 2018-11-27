@@ -37,6 +37,31 @@ slurpio(io_glue *ig, size_t *size) {
   return data;
 }
 
+static const unsigned char *
+find_fourcc(WebPData *d, const char *fourcc, size_t *result_chsize) {
+  const unsigned char *p = d->bytes;
+  size_t sz = d->size;
+
+  p += 12; /* skip the RIFF header */
+  sz -= 12;
+  while (sz > 8) {
+    size_t chsize = p[4] | (p[5] << 8) | (p[6] << 16) | (p[7] << 24);
+    if (chsize + 8 > sz) {
+      /* corrupt? */
+      return NULL;
+    }
+    if (memcmp(p, fourcc, 4) == 0) {
+      if (result_chsize)
+	*result_chsize = chsize;
+      return p;
+    }
+    p += 8 + chsize;
+    sz -= 8 + chsize;
+  }
+
+  return NULL;
+}
+
 static i_img *
 get_image(WebPMux *mux, int n, int *error) {
   WebPMuxFrameInfo f;
@@ -105,6 +130,14 @@ get_image(WebPMux *mux, int n, int *error) {
     }
     WebPFree(bmp);
   }
+
+  if (find_fourcc(&f.bitstream, "VP8L", NULL)) {
+    i_tags_set(&img->tags, "webp_mode", "lossless", 8);
+  }
+  else {
+    i_tags_set(&img->tags, "webp_mode", "lossy", 5);
+  }
+
   WebPDataClear(&f.bitstream);
 
   i_tags_set(&img->tags, "i_format", "webp", 4);

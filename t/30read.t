@@ -15,6 +15,17 @@ my $im = Imager->new;
   is_image_similar($im[0], test_image(), 2_000_000, "check for close match");
   my ($format) = $im[0]->tags(name=>'i_format');
   is($format, 'webp', "check i_format tag");
+  my ($mode) = $im[0]->tags(name => 'webp_mode');
+  is($mode, 'lossy', "check webp_mode tag");
+}
+
+{
+  my @im = Imager->read_multi(file => "testimg/lossless.webp", type => "webp");
+  is(@im, 1, "read single lossless image (using multi interface)");
+  my ($format) = $im[0]->tags(name=>'i_format');
+  is($format, 'webp', "check i_format tag");
+  my ($mode) = $im[0]->tags(name => 'webp_mode');
+  is($mode, 'lossless', "check webp_mode tag");
 }
 
 {

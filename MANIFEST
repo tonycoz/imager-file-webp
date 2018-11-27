@@ -9,6 +9,7 @@ t/20write.t
 t/30read.t
 t/lib/TestImage.pm
 testimg/anim.webp
+testimg/lossless.webp
 testimg/simpalpha.webp
 testimg/simple.webp
 WEBP.pm
