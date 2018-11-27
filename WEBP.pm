@@ -105,11 +105,28 @@ and tags are ignored when writing.
 Due to the limitations of C<webp> grayscale images are written as RGB
 images.
 
-TODO:
+=head1 TAGS
 
 =over
 
-=item * lossless support
+=over *
+
+C<webp_mode> - set when reading an image and used when writing.
+Possible values:
+
+=over
+
+=item C<lossy> - write in lossy mode.  This is the default.
+
+=item C<lossless> - write in lossless mode.
+
+=back
+
+=back
+
+TODO:
+
+=over
 
 =item * quality support for lossy
 
