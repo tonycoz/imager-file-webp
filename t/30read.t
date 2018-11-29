@@ -47,6 +47,10 @@ my $im = Imager->new;
   is($im[1]->tags(name => "webp_top"), 30, "second frame top");
   is($im[0]->tags(name => "webp_loop_count"), 0, "first loop count");
   is($im[1]->tags(name => "webp_loop_count"), 0, "second loop count");
+  is($im[0]->tags(name => "webp_background"), "color(255,255,255,255)",
+     "first background");
+  is($im[1]->tags(name => "webp_background"), "color(255,255,255,255)",
+     "second background");
   is($im[0]->tags(name => "webp_duration"), 200, "first image duration");
   is($im[1]->tags(name => "webp_duration"), 300, "second image duration");
 }

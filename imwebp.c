@@ -143,7 +143,13 @@ get_image(WebPMux *mux, int n, int *error) {
   i_tags_setn(&img->tags, "webp_duration", f.duration);
 
   if (WebPMuxGetAnimationParams(mux, &anim) == WEBP_MUX_OK) {
+    union color_u32 {
+      i_color c;
+      uint32_t n;
+    } color;
     i_tags_setn(&img->tags, "webp_loop_count", anim.loop_count);
+    color.n = anim.bgcolor;
+    i_tags_set_color(&img->tags, "webp_background", 0, &color.c);
   }
 
   WebPDataClear(&f.bitstream);
