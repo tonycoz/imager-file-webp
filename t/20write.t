@@ -111,6 +111,8 @@ SKIP:
   $im[0]->settag(name => "webp_top", value => 6);
   $im[1]->settag(name => "webp_left", value => 20);
   $im[1]->settag(name => "webp_top", value => 8);
+  $im[0]->settag(name => "webp_loop_count", value => 50);
+  $im[1]->settag(name => "webp_loop_count", value => 60);
   ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
      "write two images");
   my @im2 = Imager->read_multi(data => \$data, type => "webp");
@@ -121,6 +123,10 @@ SKIP:
   is($im2[0]->tags(name => "webp_top"), 6, "first image webp_top");
   is($im2[1]->tags(name => "webp_left"), 20, "second image webp_left");
   is($im2[1]->tags(name => "webp_top"), 8, "second image webp_top");
+
+  # only the first image matters for animation parameters
+  is($im2[0]->tags(name => "webp_loop_count"), 50, "first image webp_loop_count");
+  is($im2[1]->tags(name => "webp_loop_count"), 50, "second image webp_loop_count");
 }
 
 {

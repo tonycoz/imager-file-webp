@@ -131,11 +131,24 @@ C<lossless> - write in lossless mode.
 C<webp_quality> - the lossy compression quality, a floating point
 number from 0 (bad) to 100 (better).  Default: 80.
 
+=back
+
+Animation tags:
+
+=over
+
 =item *
 
 C<webp_left>, C<webp_top> - position of the image within the animation
 frame.  Only has meaning for multiple image files.  Odd numbers are
 stored as the even number just below.  Default: 0.
+
+=item *
+
+C<webp_loop_count> - the number of times to loop the animation.  When
+writing an animation this is fetched only from the first image.  When
+reading, the same file global value is set for every image read.
+Default: 0.
 
 =back
 

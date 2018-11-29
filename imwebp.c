@@ -324,6 +324,11 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   WebPData outd;
   WebPMuxError err;
 
+  if (count == 0) {
+    i_push_error(0, "must be at least one image");
+    return 0;
+  }
+
   for (i = 0; i < count; ++i) {
     if (imgs[i]->xsize > 16383) {
       i_push_error(0, "maximum webp image width is 16383");
@@ -358,6 +363,11 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   else {
     WebPMuxFrameInfo f;
     WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+
+    if (!i_tags_get_int(&imgs[0]->tags, "webp_loop_count", 0,
+			&params.loop_count)) {
+      params.loop_count = 0;
+    }
     f.duration = 1000/30;
     f.id = WEBP_CHUNK_ANMF;
     f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
