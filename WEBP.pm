@@ -157,6 +157,13 @@ writing an animation this is fetched only from the first image.  When
 reading, the same file global value is set for every image read.
 Default: 0.
 
+=item *
+
+C<webp_background> - the background color for the animation.  When
+writing an animation this is fetched only from the first image.  When
+reading, the same file global value is set for every image read.
+Default: white.
+
 =back
 
 TODO:

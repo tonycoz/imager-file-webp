@@ -113,6 +113,8 @@ SKIP:
   $im[1]->settag(name => "webp_top", value => 8);
   $im[0]->settag(name => "webp_loop_count", value => 50);
   $im[1]->settag(name => "webp_loop_count", value => 60);
+  $im[0]->settag(name => "webp_background", value => "color(255,128,0)");
+  $im[1]->settag(name => "webp_background", value => "color(255,128,255)");
   $im[0]->settag(name => "webp_duration", value => 200);
   $im[1]->settag(name => "webp_duration", value => 250);
   ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
@@ -131,6 +133,8 @@ SKIP:
   # only the first image matters for animation parameters
   is($im2[0]->tags(name => "webp_loop_count"), 50, "first image webp_loop_count");
   is($im2[1]->tags(name => "webp_loop_count"), 50, "second image webp_loop_count");
+  is($im2[0]->tags(name => "webp_background"), "color(255,128,0,255)", "first image webp_background");
+  is($im2[1]->tags(name => "webp_background"), "color(255,128,0,255)", "first image webp_background");
 }
 
 {

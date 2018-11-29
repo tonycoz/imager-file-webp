@@ -370,10 +370,18 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   else {
     WebPMuxFrameInfo f;
     WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+    union {
+      i_color c;
+      uint32_t n;
+    } color;
 
     if (!i_tags_get_int(&imgs[0]->tags, "webp_loop_count", 0,
 			&params.loop_count)) {
       params.loop_count = 0;
+    }
+    if (i_tags_get_color(&imgs[0]->tags, "webp_background", 0,
+			&color.c)) {
+      params.bgcolor = color.n;
     }
     f.id = WEBP_CHUNK_ANMF;
     f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
