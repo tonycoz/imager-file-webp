@@ -369,7 +369,6 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 			&params.loop_count)) {
       params.loop_count = 0;
     }
-    f.duration = 1000/30;
     f.id = WEBP_CHUNK_ANMF;
     f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
     f.blend_method = WEBP_MUX_NO_BLEND;
@@ -380,6 +379,8 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 	f.x_offset = 0;
       if (!i_tags_get_int(&imgs[i]->tags, "webp_top", 0, &f.y_offset))
 	f.y_offset = 0;
+      if (!i_tags_get_int(&imgs[i]->tags, "webp_duration", 0, &f.duration))
+	f.duration = 100;
       
       f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);
       if (!f.bitstream.bytes)

@@ -133,7 +133,9 @@ number from 0 (bad) to 100 (better).  Default: 80.
 
 =back
 
-Animation tags:
+=head2 Animation tags
+
+These only have meaning for file with more than one image.
 
 =over
 
@@ -142,6 +144,11 @@ Animation tags:
 C<webp_left>, C<webp_top> - position of the image within the animation
 frame.  Only has meaning for multiple image files.  Odd numbers are
 stored as the even number just below.  Default: 0.
+
+=item *
+
+C<webp_duraton> - duration of the frame in milliseconds.  Default:
+100.
 
 =item *
 
