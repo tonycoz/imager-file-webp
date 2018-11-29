@@ -69,6 +69,7 @@ get_image(WebPMux *mux, int n, int *error) {
   WebPBitstreamFeatures feat;
   VP8StatusCode code;
   i_img *img;
+  WebPMuxAnimParams anim;
 
   *error = 0;
   if ((err = WebPMuxGetFrame(mux, n, &f)) != WEBP_MUX_OK) {
@@ -139,6 +140,10 @@ get_image(WebPMux *mux, int n, int *error) {
   }
   i_tags_setn(&img->tags, "webp_left", f.x_offset);
   i_tags_setn(&img->tags, "webp_top", f.y_offset);
+
+  if (WebPMuxGetAnimationParams(mux, &anim) == WEBP_MUX_OK) {
+    i_tags_setn(&img->tags, "webp_loop_count", anim.loop_count);
+  }
 
   WebPDataClear(&f.bitstream);
 

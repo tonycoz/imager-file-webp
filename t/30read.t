@@ -45,6 +45,8 @@ my $im = Imager->new;
   is($im[1]->tags(name => "webp_left"), 20, "second frame left");
   is($im[0]->tags(name => "webp_top"), 0, "first frame top");
   is($im[1]->tags(name => "webp_top"), 30, "second frame top");
+  is($im[0]->tags(name => "webp_loop_count"), 0, "first loop count");
+  is($im[1]->tags(name => "webp_loop_count"), 0, "second loop count");
 }
 
 SKIP:
