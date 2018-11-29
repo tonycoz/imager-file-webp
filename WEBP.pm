@@ -135,7 +135,7 @@ number from 0 (bad) to 100 (better).  Default: 80.
 
 =head2 Animation tags
 
-These only have meaning for file with more than one image.
+These only have meaning for files with more than one image.
 
 =over
 
