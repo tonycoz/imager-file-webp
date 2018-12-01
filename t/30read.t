@@ -53,6 +53,8 @@ my $im = Imager->new;
      "second background");
   is($im[0]->tags(name => "webp_duration"), 200, "first image duration");
   is($im[1]->tags(name => "webp_duration"), 300, "second image duration");
+  is($im[0]->tags(name => "webp_dispose"), "none", "first image dispose");
+  is($im[1]->tags(name => "webp_dispose"), "background", "second image dispose");
 }
 
 SKIP:

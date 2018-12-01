@@ -136,7 +136,7 @@ EOS
 	$fheight = unpack("L<", "$fheight\0");
 	$dur = unpack("L<", "$dur\0");
 	my $blend = ($flags & 0x02) ? "Do no blend" : "Blend alpha";
-	my $dispose = ($flags & 0x01) ? "Yes" : "No";
+	my $dispose = ($flags & 0x01) ? "Yes (background)" : "No (none)";
 	my $framelen = $csize - 16;
 	print <<EOS;
   Frame X: $framex

@@ -141,6 +141,10 @@ get_image(WebPMux *mux, int n, int *error) {
   i_tags_setn(&img->tags, "webp_left", f.x_offset);
   i_tags_setn(&img->tags, "webp_top", f.y_offset);
   i_tags_setn(&img->tags, "webp_duration", f.duration);
+  if (f.dispose_method == WEBP_MUX_DISPOSE_NONE)
+    i_tags_set(&img->tags, "webp_dispose", "none", -1);
+  else
+    i_tags_set(&img->tags, "webp_dispose", "background", -1);
 
   if (WebPMuxGetAnimationParams(mux, &anim) == WEBP_MUX_OK) {
     union color_u32 {
