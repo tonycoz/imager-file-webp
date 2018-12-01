@@ -109,7 +109,7 @@ images.
 
 =over
 
-=over *
+=item *
 
 C<webp_mode> - set when reading an image and used when writing.
 Possible values:
