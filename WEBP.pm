@@ -211,10 +211,6 @@ TODO:
 
 =item * compression level support for lossless
 
-=item * tags for animation parameters on read
-
-=item * tags for animation parameters on write
-
 =item * parse EXIF metadata
 
 =item * error handling tests (and probably implementation)
