@@ -145,6 +145,10 @@ get_image(WebPMux *mux, int n, int *error) {
     i_tags_set(&img->tags, "webp_dispose", "none", -1);
   else
     i_tags_set(&img->tags, "webp_dispose", "background", -1);
+  if (f.blend_method == WEBP_MUX_BLEND)
+    i_tags_set(&img->tags, "webp_blend", "alpha", -1);
+  else
+    i_tags_set(&img->tags, "webp_blend", "none", -1);
 
   if (WebPMuxGetAnimationParams(mux, &anim) == WEBP_MUX_OK) {
     union color_u32 {

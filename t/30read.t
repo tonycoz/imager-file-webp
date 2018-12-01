@@ -55,6 +55,8 @@ my $im = Imager->new;
   is($im[1]->tags(name => "webp_duration"), 300, "second image duration");
   is($im[0]->tags(name => "webp_dispose"), "none", "first image dispose");
   is($im[1]->tags(name => "webp_dispose"), "background", "second image dispose");
+  is($im[0]->tags(name => "webp_blend"), "alpha", "first image blend");
+  is($im[1]->tags(name => "webp_blend"), "alpha", "second image blend");
 }
 
 SKIP:
