@@ -141,7 +141,7 @@ These only have meaning for files with more than one image.
 
 =item *
 
-C<webp_left>, C<webp_top> - position of the image within the animation
+C<webp_left>, C<webp_top> - position of the frame within the animation
 frame.  Only has meaning for multiple image files.  Odd numbers are
 stored as the even number just below.  Default: 0.
 
@@ -163,6 +163,23 @@ C<webp_background> - the background color for the animation.  When
 writing an animation this is fetched only from the first image.  When
 reading, the same file global value is set for every image read.
 Default: white.
+
+=item *
+
+C<webp_dispose> - the disposal method for the frame:
+
+=over
+
+=item *
+
+C<background> - restore to the background before displaying the next
+frame.
+
+=item *
+
+C<none> - leave the canvas as is when drawing the next frame.
+
+=back
 
 =back
 

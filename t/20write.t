@@ -104,6 +104,7 @@ SKIP:
   print "# ", $im->errstr, "\n";
 }
 
+SKIP:
 {
   my @im = ( test_image(), test_image() );
   my $data;
@@ -117,8 +118,11 @@ SKIP:
   $im[1]->settag(name => "webp_background", value => "color(255,128,255)");
   $im[0]->settag(name => "webp_duration", value => 200);
   $im[1]->settag(name => "webp_duration", value => 250);
+  $im[0]->settag(name => "webp_dispose", value => "background");
+  $im[1]->settag(name => "webp_dispose", value => "none");
   ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
-     "write two images");
+     "write two images")
+    or skip "couldn't read: " . Imager->errstr, 1;
   my @im2 = Imager->read_multi(data => \$data, type => "webp");
   is(@im2, 2, "read two images");
   is_image_similar($im2[0], $im[0], 2_000_000, "check first image");
@@ -129,6 +133,8 @@ SKIP:
   is($im2[1]->tags(name => "webp_top"), 8, "second image webp_top");
   is($im2[0]->tags(name => "webp_duration"), 200, "first image webp_duration");
   is($im2[1]->tags(name => "webp_duration"), 250, "second image webp_duration");
+  is($im2[0]->tags(name => "webp_dispose"), "background", "first image webp_dispose");
+  is($im2[1]->tags(name => "webp_dispose"), "none", "second image webp_dispose");
 
   # only the first image matters for animation parameters
   is($im2[0]->tags(name => "webp_loop_count"), 50, "first image webp_loop_count");

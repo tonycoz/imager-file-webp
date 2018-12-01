@@ -392,6 +392,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
     f.blend_method = WEBP_MUX_NO_BLEND;
     for (i = 0; i < count; ++i) {
       WebPData d;
+      char buf[80];
 
       if (!i_tags_get_int(&imgs[i]->tags, "webp_left", 0, &f.x_offset))
 	f.x_offset = 0;
@@ -399,6 +400,21 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 	f.y_offset = 0;
       if (!i_tags_get_int(&imgs[i]->tags, "webp_duration", 0, &f.duration))
 	f.duration = 100;
+      if (i_tags_get_string(&imgs[i]->tags, "webp_dispose", 0, buf, sizeof(buf))) {
+	if (strcmp(buf, "none") == 0) {
+	  f.dispose_method = WEBP_MUX_DISPOSE_NONE;
+	}
+	else if (strcmp(buf, "background") == 0) {
+	  f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+	}
+	else {
+	  i_push_error(0, "invalid webp_dispose, must be 'none' or 'background'");
+	  goto fail;
+	}
+      }
+      else {
+	f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+      }
       
       f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);
       if (!f.bitstream.bytes)
