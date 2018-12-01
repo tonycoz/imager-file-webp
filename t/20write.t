@@ -183,4 +183,21 @@ SKIP:
        "check message");
 }
 
+{
+  my $im = test_image();
+  my $data;
+  ok(!Imager->write_multi({ data => \$data, type => "webp", webp_dispose => "bad"}, $im, $im),
+     "fail to write with webp_dispose bad");
+  is(Imager->errstr, "invalid webp_dispose, must be 'none' or 'background'",
+     "check message");
+}
+{
+  my $im = test_image();
+  my $data;
+  ok(!Imager->write_multi({ data => \$data, type => "webp", webp_blend => "bad"}, $im, $im),
+     "fail to write with webp_blend bad");
+  is(Imager->errstr, "invalid webp_blend, must be 'none' or 'alpha'",
+     "check message");
+}
+
 done_testing();
