@@ -392,8 +392,6 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
       params.bgcolor = color.n;
     }
     f.id = WEBP_CHUNK_ANMF;
-    f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
-    f.blend_method = WEBP_MUX_NO_BLEND;
     for (i = 0; i < count; ++i) {
       WebPData d;
       char buf[80];
@@ -418,6 +416,22 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
       }
       else {
 	f.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+      }
+      
+      if (i_tags_get_string(&imgs[i]->tags, "webp_blend", 0, buf, sizeof(buf))) {
+	if (strcmp(buf, "alpha") == 0) {
+	  f.blend_method = WEBP_MUX_BLEND;
+	}
+	else if (strcmp(buf, "none") == 0) {
+	  f.blend_method = WEBP_MUX_NO_BLEND;
+	}
+	else {
+	  i_push_error(0, "invalid webp_blend, must be 'none' or 'alpha'");
+	  goto fail;
+	}
+      }
+      else {
+	f.blend_method = WEBP_MUX_BLEND;
       }
       
       f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);

@@ -181,6 +181,28 @@ C<none> - leave the canvas as is when drawing the next frame.
 
 =back
 
+Default: C<background>.
+
+=item *
+
+C<webp_blend> - the blend method for the frame:
+
+=over
+
+=item *
+
+C<alpha> - alpha combine the frame with canvas.
+
+=item *
+
+C<none> - replace the area under the image with the frame.
+
+=back
+
+If the frame has no alpha channel this option makes no difference.
+
+Default: C<alpha>.
+
 =back
 
 TODO:

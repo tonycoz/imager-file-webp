@@ -120,6 +120,8 @@ SKIP:
   $im[1]->settag(name => "webp_duration", value => 250);
   $im[0]->settag(name => "webp_dispose", value => "background");
   $im[1]->settag(name => "webp_dispose", value => "none");
+  $im[0]->settag(name => "webp_blend", value => "none");
+  $im[1]->settag(name => "webp_blend", value => "alpha");
   ok(Imager->write_multi({ data => \$data, type => "webp" }, @im),
      "write two images")
     or skip "couldn't read: " . Imager->errstr, 1;
@@ -135,6 +137,8 @@ SKIP:
   is($im2[1]->tags(name => "webp_duration"), 250, "second image webp_duration");
   is($im2[0]->tags(name => "webp_dispose"), "background", "first image webp_dispose");
   is($im2[1]->tags(name => "webp_dispose"), "none", "second image webp_dispose");
+  is($im2[0]->tags(name => "webp_blend"), "none", "first image webp_blend");
+  is($im2[1]->tags(name => "webp_blend"), "alpha", "second image webp_blend");
 
   # only the first image matters for animation parameters
   is($im2[0]->tags(name => "webp_loop_count"), 50, "first image webp_loop_count");
