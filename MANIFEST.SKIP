@@ -2,7 +2,8 @@
 \.obj$
 \.bs$
 WEBP\.c$
-Makefile
+Makefile$
+^Imager-File-WEBP
 MYMETA\.*
 blib
 
