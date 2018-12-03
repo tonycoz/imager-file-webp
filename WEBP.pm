@@ -205,17 +205,26 @@ Default: C<alpha>.
 
 =back
 
-TODO:
+=head1 TODO
 
-=over
+These aren't intended immediately, but are possible future
+enhancements.
 
-=item * compression level support for lossless
+=head2 Compression level support for lossless
 
-=item * parse EXIF metadata
+This is complicated by the simple lossless API doesn't support it
+(while lossy does.)
 
-=item * error handling tests (and probably implementation)
+=head2 Parse EXIF metadata
 
-=back
+To fix this I'd probably pull imexif.* out of Imager::File::JPEG and
+make it part of the Imager API.
+
+Maybe also add extended EXIF/Geotagging via libexif or Exiftool.
+
+=head2 Error handling tests (and probably implementation)
+
+I think this is largely done.
 
 =head1 AUTHOR
 
