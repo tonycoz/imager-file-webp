@@ -107,12 +107,13 @@ my %probe =
   (
    name => "WEBP",
    inccheck => sub { -e File::Spec->catfile($_[0], "webp/mux.h") },
-   libbase => "webpmux",
-   testcode => _webp_test_code(),
-   testcodeheaders => [ "webp/mux.h", "stdio.h", "string.h" ],
+   libbase => [ "webpmux", "webp" ],
+   #testcode => _webp_test_code(),
+   #testcodeheaders => [ "webp/mux.h", "stdio.h", "string.h" ],
    incpath => \@incpaths,
    libpath => \@libpaths,
    verbose => $verbose,
+   pkg => [ "libwebpmux" ],
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
