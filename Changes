@@ -5,6 +5,8 @@ Imager-File-WEBP 0.003 - unreleased
 
  - differentiate between file and image tags in the docs
 
+ - document libwebp requirements
+
 Imager-File-WEBP 0.002 - 3 Dec 2018
 ======================
 
