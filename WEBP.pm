@@ -97,9 +97,6 @@ Imager::File::WEBP - read and write WEBP files
 
 Implements .webp file support for Imager.
 
-So far this is very, very basic.  No tags are set when reading images
-and tags are ignored when writing.
-
 Due to the limitations of C<webp> grayscale images are written as RGB
 images.
 
