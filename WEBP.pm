@@ -209,6 +209,11 @@ Default: C<alpha>.
 
 =back
 
+=head1 INSTALLATION
+
+To install Imager::File::WEBP you need Imager installed and you need
+libwebp 0.5.0 or later and the libwebpmux distributed with libwebp.
+
 =head1 TODO
 
 These aren't intended immediately, but are possible future
