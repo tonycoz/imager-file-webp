@@ -132,18 +132,10 @@ number from 0 (bad) to 100 (better).  Default: 80.
 
 These only have meaning for files with more than one image.
 
+Tags that can be set for the whole file, only the tag value from the
+first image is used when writing:
+
 =over
-
-=item *
-
-C<webp_left>, C<webp_top> - position of the frame within the animation
-frame.  Only has meaning for multiple image files.  Odd numbers are
-stored as the even number just below.  Default: 0.
-
-=item *
-
-C<webp_duraton> - duration of the frame in milliseconds.  Default:
-100.
 
 =item *
 
@@ -158,6 +150,23 @@ C<webp_background> - the background color for the animation.  When
 writing an animation this is fetched only from the first image.  When
 reading, the same file global value is set for every image read.
 Default: white.
+
+=back
+
+The following can be set separately for each image in the file:
+
+=over
+
+=item *
+
+C<webp_left>, C<webp_top> - position of the frame within the animation
+frame.  Only has meaning for multiple image files.  Odd numbers are
+stored as the even number just below.  Default: 0.
+
+=item *
+
+C<webp_duraton> - duration of the frame in milliseconds.  Default:
+100.
 
 =item *
 
