@@ -165,7 +165,7 @@ stored as the even number just below.  Default: 0.
 
 =item *
 
-C<webp_duraton> - duration of the frame in milliseconds.  Default:
+C<webp_duration> - duration of the frame in milliseconds.  Default:
 100.
 
 =item *
@@ -219,10 +219,10 @@ libwebp 0.5.0 or later and the libwebpmux distributed with libwebp.
 These aren't intended immediately, but are possible future
 enhancements.
 
-=head2 Compression level support for lossless
+=head2 Compression level support for lossless images
 
-This is complicated by the simple lossless API doesn't support it
-(while lossy does.)
+The simple lossless API doesn't include a compression level parameter,
+which complicates this.  It may not be worth doing anyway.
 
 =head2 Parse EXIF metadata
 
