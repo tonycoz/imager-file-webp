@@ -1,3 +1,13 @@
+Imager-File-WEBP 0.004 -
+======================
+
+ - fix some typos in the documentation
+
+ - fix the abstract generated in META.*
+
+ - add support for reading EXIF metadata into tags when built with
+   Imager 1.010 or later.
+
 Imager-File-WEBP 0.003 - 4 Dec 2018
 ======================
 
