@@ -2,6 +2,7 @@ Imager-File-WEBP 0.004 -
 ======================
 
  - fix some typos in the documentation
+   https://rt.cpan.org/Ticket/Display.html?id=127975
 
  - fix the abstract generated in META.*
 
