@@ -128,6 +128,10 @@ number from 0 (bad) to 100 (better).  Default: 80.
 
 =back
 
+If Imager::File::WEBP was built with Imager 1.010 then EXIF metadata
+will also be read from the file.  See the description at
+L<Imager::Files/JPEG>.
+
 =head2 Animation tags
 
 These only have meaning for files with more than one image.
