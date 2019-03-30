@@ -25,7 +25,7 @@ do_dump($fh, 0);
 
 sub do_dump {
   my ($fh, $indent) = @_;
-  
+
   my $chead;
   while (read($fh, $chead, 8) == 8) {
     my ($cfourcc, $csize) = unpack("a4L<", $chead);
@@ -53,7 +53,7 @@ sub do_dump {
 	my $vscale = ($height >> 14) & 3;
 	$width &= 0x3fff;
 	$height &= 0x3fff;
-      print indent(<<EOS, $indent);
+	print indent(<<EOS, $indent);
   Type: $frame_type
   Version: $version
   Show Frame: $show_frame

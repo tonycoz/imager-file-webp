@@ -100,7 +100,7 @@ get_image(WebPMux *mux, int n, int *error) {
     int width, height;
     int y;
     uint8_t *bmp = WebPDecodeRGBA(f.bitstream.bytes, f.bitstream.size,
-				 &width, &height);
+				  &width, &height);
     uint8_t *p = bmp;
     if (!bmp) {
       WebPDataClear(&f.bitstream);
@@ -399,7 +399,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
       params.loop_count = 0;
     }
     if (i_tags_get_color(&imgs[0]->tags, "webp_background", 0,
-			&color.c)) {
+			 &color.c)) {
       params.bgcolor = color.n;
     }
     f.id = WEBP_CHUNK_ANMF;
