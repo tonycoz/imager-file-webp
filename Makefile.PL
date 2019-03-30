@@ -124,6 +124,10 @@ if ($probe_res) {
   $opts{DEFINE} .= " $probe_res->{DEFINE}";
   $opts{INC} = "@inc";
 
+  if ($Config{d_snprintf}) {
+    $opts{DEFINE} .= " -DHAVE_SNPRINTF";
+  }
+
   WriteMakefile(%opts);
 }
 else {
