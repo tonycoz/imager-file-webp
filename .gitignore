@@ -13,5 +13,7 @@
 /*.webp
 /*.jpeg
 /*.jpg
+/*.tar.gz
 
 /Imager-File-WEBP-*
+/cov-int
