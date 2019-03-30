@@ -4,6 +4,11 @@
 #include "webp/decode.h"
 #include "imext.h"
 #include <errno.h>
+#include <limits.h>
+
+struct i_webp_config_tag {
+  struct WebPConfig cfg;
+};
 
 #define START_SLURP_SIZE 8192
 #define next_slurp_size(old) ((size_t)((old) * 3 / 2) + 10)
@@ -504,3 +509,191 @@ i_webp_libversion(void) {
   }
   return buf;
 }
+
+typedef struct {
+  const char *name;
+  int value;
+} name_map_entry_t;
+
+#define NAMES_END { NULL, -1 }
+
+static const name_map_entry_t
+preset_names[] =
+  {
+    { "default", WEBP_PRESET_DEFAULT },
+    { "picture", WEBP_PRESET_PICTURE },
+    { "photo",   WEBP_PRESET_PHOTO },
+    { "drawing", WEBP_PRESET_DRAWING },
+    { "icon",    WEBP_PRESET_ICON },
+    { "text",    WEBP_PRESET_TEXT },
+    NAMES_END
+  };
+
+static const name_map_entry_t
+lossy_names[] =
+  {
+    { "lossy", 0 },
+    { "lossless", 1 },
+    NAMES_END
+  };
+
+static const name_map_entry_t
+hint_names[] =
+  {
+    { "default", WEBP_HINT_DEFAULT },
+    { "picture", WEBP_HINT_PICTURE },
+    { "photo", WEBP_HINT_PHOTO },
+    { "graph", WEBP_HINT_GRAPH },
+    NAMES_END
+  };
+
+static int
+find_map_value(const name_map_entry_t *map, i_img *im, const char *tag_name,
+	       int *result, int def) {
+  int i = 0;
+  char text[100];
+
+  if (!i_tags_get_string(&im->tags, tag_name, 0, text, sizeof(text))) {
+    *result = def;
+    return 1;
+  }
+
+  for (i = 0; map[i].name; i++) {
+    if (strcmp(map[i].name, text) == 0) {
+      *result = map[i].value;
+      return 1;
+    }
+  }
+
+  i_push_errorf(0, "Unknown value %s for tag %s", text, tag_name);
+
+  return 0;
+}
+
+typedef struct {
+  const char *name;
+  ptrdiff_t off;
+  int min, max;
+} named_int_t;
+
+#define STR_(x) #x
+#define EXPAND(x) x
+
+#define INT_ENTRY(name, min, max) { "webp_" STR_(name), offsetof(struct WebPConfig, name), min, max }
+
+static const named_int_t
+named_ints[] =
+  {
+    INT_ENTRY(method, 0, 6),
+    INT_ENTRY(target_size, 0, INT_MAX),
+    INT_ENTRY(segments, 1, 4),
+    INT_ENTRY(sns_strength, 0, 100),
+    INT_ENTRY(filter_strength, 0, 100),
+    INT_ENTRY(filter_sharpness, 0, 7),
+    INT_ENTRY(filter_type, 0, 1),
+    INT_ENTRY(autofilter, 0, 1),
+    INT_ENTRY(alpha_compression, 0, 1),
+    INT_ENTRY(alpha_filtering, 0, 2),
+    INT_ENTRY(alpha_quality, 0, 100),
+    INT_ENTRY(pass, 1, 10),
+    INT_ENTRY(preprocessing, 0, 1),
+    INT_ENTRY(partitions, 0, 3),
+    INT_ENTRY(partition_limit, 0, 100),
+#if WEBP_ENCODER_ABI_VERSION >= 0x20e
+    INT_ENTRY(use_sharp_yuv, 0, 1),
+#endif
+#if WEBP_ENCODER_ABI_VERSION >= 0x201
+    INT_ENTRY(thread_level, 0, 1),
+    INT_ENTRY(low_memory, 0, 1),
+#endif
+    NAMES_END
+  };
+
+static int
+webp_compress_defaults(i_img *im, struct WebPConfig *config) {
+  int preset;
+  double quality;
+  int lossless;
+
+  i_clear_error();
+
+  if (!find_map_value(preset_names, im, "webp_preset", &preset, WEBP_PRESET_DEFAULT))
+    return 0;
+
+  if (!i_tags_get_float(&im->tags, "webp_quality", 0, &quality)) {
+    quality = 75.0;
+  }
+
+  if (!WebPConfigPreset(config, preset, quality)) {
+    i_push_error(0, "failed to configure preset");
+    return 0;
+  }
+
+  if (!find_map_value(lossy_names, im, "webp_mode", &lossless, 0))
+    return 0;
+
+  if (lossless) {
+    int level;
+    if (i_tags_get_int(&im->tags, "webp_lossless_level", 0, &level)) {
+      if (!WebPConfigLosslessPreset(config, level)) {
+	i_push_error(0, "failed to configure lossless preset");
+	return 0;
+      }
+    }
+  }
+
+  {
+    int hint;
+    if (!find_map_value(hint_names, im, "webp_hint", &hint, config->image_hint))
+      return 0;
+    config->image_hint = hint;
+  }
+  {
+    char *base = (char *)config;
+    const named_int_t *n;
+    int i;
+    for (n = named_ints; n->name; ++n) {
+      int value;
+      if (i_tags_get_int(&im->tags, n->name, 0, &value)) {
+	if (value < n->min || value > n->max) {
+	  i_push_errorf(0, "value %d for %s out of range %d to %d",
+			value, n->name, n->min, n->max);
+	  return 0;
+	}
+	*(int*)(base + n->off) = value;
+      }
+    }
+  }
+  {
+    double psnr;
+    if (i_tags_get_float(&im->tags, "webp_target_psnr", 0, &psnr))
+      config->target_PSNR = psnr;
+  }
+
+  return 1;
+}
+
+i_webp_config_t *
+i_webp_config_create(i_img *im) {
+  i_webp_config_t *result = mymalloc(sizeof(i_webp_config_t));
+
+  if (!webp_compress_defaults(im, &result->cfg)) {
+    myfree(result);
+    return NULL;
+  }
+
+  return result;
+}
+
+void
+i_webp_config_destroy(i_webp_config_t *cfg) {
+  myfree(cfg);
+}
+
+i_webp_config_t *
+i_webp_config_clone(i_webp_config_t *cfg) {
+  i_webp_config_t *result = mymalloc(sizeof(i_webp_config_t));
+  *result = *cfg;
+  return result;
+}
+

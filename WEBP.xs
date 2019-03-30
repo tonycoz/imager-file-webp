@@ -9,6 +9,11 @@ extern "C" {
 #include "imperl.h"
 #include "imwebp.h"
 
+typedef i_webp_config_t *Imager__File__WEBP__Config;
+
+#define i_webp_config_DESTROY i_webp_config_destroy
+#define i_webp_config_new(cls, im) i_webp_config_create(im)
+
 DEFINE_IMAGER_CALLBACKS;
 
 MODULE = Imager::File::WEBP  PACKAGE = Imager::File::WEBP
@@ -86,6 +91,20 @@ i_writewebp_multi(ig, ...)
 
 const char *
 i_webp_libversion()
+
+MODULE = Imager::File::WEBP PACKAGE = Imager::File::WEBP::Config  PREFIX = i_webp_config_
+
+Imager::File::WEBP::Config
+i_webp_config_new(cls, im)
+       Imager im
+
+void
+i_webp_config_DESTROY(cfg)
+	Imager::File::WEBP::Config cfg
+
+Imager::File::WEBP::Config
+i_webp_config_clone(cfg)
+	Imager::File::WEBP::Config cfg
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
