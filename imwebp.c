@@ -45,7 +45,7 @@ find_fourcc(WebPData *d, const char *fourcc, size_t *result_chsize) {
   p += 12; /* skip the RIFF header */
   sz -= 12;
   while (sz > 8) {
-    size_t chsize = p[4] | (p[5] << 8) | (p[6] << 16) | (p[7] << 24);
+    size_t chsize = p[4] | (p[5] << 8) | (p[6] << 16) | ((size_t)p[7] << 24);
     if (chsize + 8 > sz) {
       /* corrupt? */
       return NULL;
