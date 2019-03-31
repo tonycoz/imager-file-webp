@@ -106,5 +106,43 @@ Imager::File::WEBP::Config
 i_webp_config_clone(cfg)
 	Imager::File::WEBP::Config cfg
 
+int
+method(cfg, value = NULL)
+	Imager::File::WEBP::Config cfg
+	SV *value
+    ALIAS:
+        Imager::File::WEBP::Config::target_size = 1
+	Imager::File::WEBP::Config::segments = 2
+	Imager::File::WEBP::Config::sns_strength = 3
+	Imager::File::WEBP::Config::filter_strength = 4
+	Imager::File::WEBP::Config::filter_sharpness = 5
+	Imager::File::WEBP::Config::filter_type = 6
+	Imager::File::WEBP::Config::autofilter = 7
+	Imager::File::WEBP::Config::alpha_compression = 8
+	Imager::File::WEBP::Config::alpha_filtering = 9
+	Imager::File::WEBP::Config::alpha_quality = 10
+	Imager::File::WEBP::Config::pass = 11
+	Imager::File::WEBP::Config::preprocessing = 12
+	Imager::File::WEBP::Config::partitions = 13
+	Imager::File::WEBP::Config::partition_limit = 14
+	Imager::File::WEBP::Config::use_sharp_yuv = 15
+	Imager::File::WEBP::Config::thread_level = 16
+	Imager::File::WEBP::Config::low_memory = 17
+    PREINIT:
+	SV *field;
+    CODE:
+        field = sv_2mortal(newSVpvf("webp_%s", GvNAME(CvGV(cv))));
+        if (value) {
+	  int ival = SvIV(value);
+	  if (!i_webp_config_setint(cfg, SvPV_nolen(field), ival))
+	    XSRETURN_EMPTY;
+	}
+	else {
+	  if (!i_webp_config_getint(cfg, SvPV_nolen(field), &RETVAL))
+	    XSRETURN_EMPTY;
+	}
+    OUTPUT:
+        RETVAL
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

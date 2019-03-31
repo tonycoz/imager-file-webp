@@ -651,7 +651,6 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
   {
     char *base = (char *)config;
     const named_int_t *n;
-    int i;
     for (n = named_ints; n->name; ++n) {
       int value;
       if (i_tags_get_int(&im->tags, n->name, 0, &value)) {
@@ -697,3 +696,47 @@ i_webp_config_clone(i_webp_config_t *cfg) {
   return result;
 }
 
+int
+i_webp_config_setint(i_webp_config_t *cfg, const char *name, int value) {
+  WebPConfig oldconf = cfg->cfg;
+  char *base = (char *)&oldconf;
+  i_clear_error();
+
+  const named_int_t *n;
+  for (n = named_ints; n->name; ++n) {
+    if (strcmp(name, n->name) == 0) {
+      if (value < n->min || value > n->max) {
+	i_push_errorf(0, "value %d for %s out of range %d to %d",
+		      value, n->name, n->min, n->max);
+	return 0;
+      }
+      *(int*)(base + n->off) = value;
+      if (!WebPValidateConfig(&oldconf)) {
+	i_push_errorf(0, "update failed validation");
+	return 0;
+      }
+      cfg->cfg = oldconf;
+      return 1;
+    }
+  }
+  
+  i_push_errorf(0, "unknown integer field %s", name);
+  return 0;
+}
+
+int
+i_webp_config_getint(i_webp_config_t *cfg, const char *name, int *value) {
+  char *base = (char *)&cfg->cfg;
+  i_clear_error();
+
+  const named_int_t *n;
+  for (n = named_ints; n->name; ++n) {
+    if (strcmp(name, n->name) == 0) {
+      *value = *(int*)(base + n->off);
+      return 1;
+    }
+  }
+  
+  i_push_errorf(0, "unknown integer field %s", name);
+  return 0;
+}
