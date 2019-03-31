@@ -740,3 +740,55 @@ i_webp_config_getint(i_webp_config_t *cfg, const char *name, int *value) {
   i_push_errorf(0, "unknown integer field %s", name);
   return 0;
 }
+
+int
+i_webp_config_getfloat(i_webp_config_t *cfg, const char *name, float *value) {
+  i_clear_error();
+
+  if (strcmp(name, "webp_quality") == 0) {
+    *value = cfg->cfg.quality;
+    return 1;
+  }
+  else if (strcmp(name, "webp_target_psnr") == 0) {
+    *value = cfg->cfg.target_PSNR;
+    return 1;
+  }
+  else {
+    i_push_errorf(0, "unknown field %s", name);
+    return 0;
+  }
+}
+
+int
+i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, float value) {
+  float *field = NULL;
+  WebPConfig oldconf = cfg->cfg;
+  i_clear_error();
+
+  if (strcmp(name, "webp_quality") == 0) {
+    if (value < 0 || value > 100) {
+      i_push_errorf(0, "value %f for webp_quality out of range 0 to 100", value);
+      return 0;
+    }
+    oldconf.quality = value;
+  }
+  else if (strcmp(name, "webp_target_psnr") == 0) {
+    if (value < 0) {
+      i_push_errorf(0, "value %f for webp_target_psnr must be non-negative", value);
+      return 0;
+    }
+    oldconf.target_PSNR = value;
+  }
+  else {
+    i_push_errorf(0, "unknown field %s", name);
+    return 0;
+  }
+
+  if (!WebPValidateConfig(&oldconf)) {
+    i_push_errorf(0, "update failed validation");
+    return 0;
+  }
+  cfg->cfg = oldconf;
+
+  return 1;
+}

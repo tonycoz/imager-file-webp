@@ -144,5 +144,30 @@ method(cfg, value = NULL)
     OUTPUT:
         RETVAL
 
+SV *
+quality(cfg, value = NULL)
+	Imager::File::WEBP::Config cfg
+	SV *value
+    ALIAS:
+        Imager::File::WEBP::Config::target_psnr = 1
+    PREINIT:
+	SV *field;
+    CODE:
+        field = sv_2mortal(newSVpvf("webp_%s", GvNAME(CvGV(cv))));
+        if (value) {
+	  float fval = SvNV(value);
+	  if (!i_webp_config_setfloat(cfg, SvPV_nolen(field), fval))
+	    XSRETURN_EMPTY;
+	  RETVAL = &PL_sv_yes;
+	}
+	else {
+	  float value = 0;
+	  if (!i_webp_config_getfloat(cfg, SvPV_nolen(field), &value))
+	    XSRETURN_EMPTY;
+	  RETVAL = newSVnv(value);
+	}
+    OUTPUT:
+        RETVAL
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

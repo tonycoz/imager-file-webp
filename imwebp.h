@@ -15,10 +15,10 @@ void i_webp_config_destroy(i_webp_config_t *cfg);
 i_webp_config_t *i_webp_config_clone(i_webp_config_t *cfg);
 
 int i_webp_config_setint(i_webp_config_t *cfg, const char *name, int value);
-int i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, double value);
+int i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, float value);
 int i_webp_config_set_hint(i_webp_config_t *cfg, const char *value);
 int i_webp_config_getint(i_webp_config_t *cfg, const char *name, int *value);
-int i_webp_config_getfloat(i_webp_config_t *cfg, const char *name, double *value);
+int i_webp_config_getfloat(i_webp_config_t *cfg, const char *name, float *value);
 int i_webp_config_get_hint(i_webp_config_t *cfg, const char **value);
 
 #endif
