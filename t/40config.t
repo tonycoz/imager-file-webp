@@ -27,6 +27,11 @@ pass("hopefully destroyed it");
   is($cfg->quality, 50.5, "check quality");
   ok(!$cfg->quality(101), "try a bad quality");
   is($cfg->quality, 50.5, "check quality wasn't changed");
+
+  ok($cfg->hint("picture"), "set hint to picture");
+  is($cfg->hint, "picture", "check it was set");
+  ok(!$cfg->hint("xx"), "set hint to bad value");
+  is($cfg->hint, "picture", "check hint wasn't changed");
 }
 
 done_testing();

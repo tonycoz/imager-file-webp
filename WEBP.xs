@@ -169,5 +169,27 @@ quality(cfg, value = NULL)
     OUTPUT:
         RETVAL
 
+SV *
+hint(cfg, value = NULL)
+	Imager::File::WEBP::Config cfg
+	SV *value
+    PREINIT:
+	SV *field;
+    CODE:
+        if (value) {
+	  const char *val = SvPV_nolen(value);
+	  if (!i_webp_config_set_hint(cfg, val))
+	    XSRETURN_EMPTY;
+	  RETVAL = &PL_sv_yes;
+	}
+	else {
+	  const char *value = 0;
+	  if (!i_webp_config_get_hint(cfg, &value))
+	    XSRETURN_EMPTY;
+	  RETVAL = newSVpv(value, 0);
+	}
+    OUTPUT:
+        RETVAL
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

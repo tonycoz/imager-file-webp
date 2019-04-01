@@ -548,9 +548,24 @@ hint_names[] =
   };
 
 static int
-find_map_value(const name_map_entry_t *map, i_img *im, const char *tag_name,
+find_map_value(const name_map_entry_t *map, const char *value_name, const char *tag_name,
 	       int *result, int def) {
-  int i = 0;
+  while(map->name) {
+    if (strcmp(map->name, value_name) == 0) {
+      *result = map->value;
+      return 1;
+    }
+    ++map;
+  }
+
+  i_push_errorf(0, "Unknown value %s for tag %s", value_name, tag_name);
+
+  return 0;
+}
+
+static int
+find_map_tag(const name_map_entry_t *map, i_img *im, const char *tag_name,
+	     int *result, int def) {
   char text[100];
 
   if (!i_tags_get_string(&im->tags, tag_name, 0, text, sizeof(text))) {
@@ -558,16 +573,7 @@ find_map_value(const name_map_entry_t *map, i_img *im, const char *tag_name,
     return 1;
   }
 
-  for (i = 0; map[i].name; i++) {
-    if (strcmp(map[i].name, text) == 0) {
-      *result = map[i].value;
-      return 1;
-    }
-  }
-
-  i_push_errorf(0, "Unknown value %s for tag %s", text, tag_name);
-
-  return 0;
+  return find_map_value(map, text, tag_name, result, def);
 }
 
 typedef struct {
@@ -617,7 +623,7 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
 
   i_clear_error();
 
-  if (!find_map_value(preset_names, im, "webp_preset", &preset, WEBP_PRESET_DEFAULT))
+  if (!find_map_tag(preset_names, im, "webp_preset", &preset, WEBP_PRESET_DEFAULT))
     return 0;
 
   if (!i_tags_get_float(&im->tags, "webp_quality", 0, &quality)) {
@@ -629,7 +635,7 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
     return 0;
   }
 
-  if (!find_map_value(lossy_names, im, "webp_mode", &lossless, 0))
+  if (!find_map_tag(lossy_names, im, "webp_mode", &lossless, 0))
     return 0;
 
   if (lossless) {
@@ -644,7 +650,7 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
 
   {
     int hint;
-    if (!find_map_value(hint_names, im, "webp_hint", &hint, config->image_hint))
+    if (!find_map_tag(hint_names, im, "webp_hint", &hint, config->image_hint))
       return 0;
     config->image_hint = hint;
   }
@@ -792,3 +798,30 @@ i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, float value) {
 
   return 1;
 }
+
+int
+i_webp_config_set_hint(i_webp_config_t *cfg, const char *value) {
+  int hint;
+  if (!find_map_value(hint_names, value, "webp_hint", &hint, cfg->cfg.image_hint))
+    return 0;
+ 
+  cfg->cfg.image_hint = hint;
+
+  return 1;
+}
+
+int
+i_webp_config_get_hint(i_webp_config_t *cfg, const char **value) {
+  const name_map_entry_t *m = hint_names;
+  *value = NULL;
+  while (m->name) {
+    if (m->value == cfg->cfg.image_hint) {
+      *value = m->name;
+      return 1;
+    }
+    ++m;
+  }
+  i_push_errorf(0, "unknown value %d for webp_hint", (int)cfg->cfg.image_hint);
+  return 0;
+}
+
