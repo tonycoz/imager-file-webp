@@ -13,6 +13,7 @@ typedef struct i_webp_config_tag i_webp_config_t;
 i_webp_config_t *i_webp_config_create(i_img *im);
 void i_webp_config_destroy(i_webp_config_t *cfg);
 i_webp_config_t *i_webp_config_clone(i_webp_config_t *cfg);
+int i_webp_config_update(i_webp_config_t *cfg, i_img *im);
 
 int i_webp_config_setint(i_webp_config_t *cfg, const char *name, int value);
 int i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, float value);

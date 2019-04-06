@@ -615,6 +615,52 @@ named_ints[] =
     NAMES_END
   };
 
+int
+config_update(WebPConfig *cfg, i_img *im) {
+  WebPConfig work = *cfg;
+
+  {
+    int hint;
+    if (!find_map_tag(hint_names, im, "webp_hint", &hint, work.image_hint))
+      return 0;
+    work.image_hint = hint;
+  }
+  {
+    char *base = (char *)&work;
+    const named_int_t *n;
+    for (n = named_ints; n->name; ++n) {
+      int value;
+      if (i_tags_get_int(&im->tags, n->name, 0, &value)) {
+	if (value < n->min || value > n->max) {
+	  i_push_errorf(0, "value %d for %s out of range %d to %d",
+			value, n->name, n->min, n->max);
+	  return 0;
+	}
+	*(int*)(base + n->off) = value;
+      }
+    }
+  }
+  {
+    double psnr;
+    if (i_tags_get_float(&im->tags, "webp_target_psnr", 0, &psnr))
+      work.target_PSNR = psnr;
+  }
+  {
+    double qual;
+    if (i_tags_get_float(&im->tags, "webp_quality", 0, &qual))
+      work.quality = qual;
+  }
+  
+  if (!WebPValidateConfig(&work)) {
+    i_push_errorf(0, "update failed validation");
+    return 0;
+  }
+
+  *cfg = work;
+
+  return 1;
+}
+
 static int
 webp_compress_defaults(i_img *im, struct WebPConfig *config) {
   int preset;
@@ -648,34 +694,7 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
     }
   }
 
-  {
-    int hint;
-    if (!find_map_tag(hint_names, im, "webp_hint", &hint, config->image_hint))
-      return 0;
-    config->image_hint = hint;
-  }
-  {
-    char *base = (char *)config;
-    const named_int_t *n;
-    for (n = named_ints; n->name; ++n) {
-      int value;
-      if (i_tags_get_int(&im->tags, n->name, 0, &value)) {
-	if (value < n->min || value > n->max) {
-	  i_push_errorf(0, "value %d for %s out of range %d to %d",
-			value, n->name, n->min, n->max);
-	  return 0;
-	}
-	*(int*)(base + n->off) = value;
-      }
-    }
-  }
-  {
-    double psnr;
-    if (i_tags_get_float(&im->tags, "webp_target_psnr", 0, &psnr))
-      config->target_PSNR = psnr;
-  }
-
-  return 1;
+  return config_update(config, im);
 }
 
 i_webp_config_t *
@@ -700,6 +719,11 @@ i_webp_config_clone(i_webp_config_t *cfg) {
   i_webp_config_t *result = mymalloc(sizeof(i_webp_config_t));
   *result = *cfg;
   return result;
+}
+
+int
+i_webp_config_update(i_webp_config_t *cfg, i_img *im) {
+  return config_update(&cfg->cfg, im);
 }
 
 int

@@ -32,6 +32,12 @@ pass("hopefully destroyed it");
   is($cfg->hint, "picture", "check it was set");
   ok(!$cfg->hint("xx"), "set hint to bad value");
   is($cfg->hint, "picture", "check hint wasn't changed");
+
+  my $im = test_image();
+  ok($im->settag(name => "webp_quality", value => 90.5),
+     "set quality on check image");
+  ok($cfg->update($im), "update from new image");
+  is($cfg->quality, 90.5, "check update worked");
 }
 
 done_testing();

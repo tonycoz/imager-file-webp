@@ -106,6 +106,11 @@ Imager::File::WEBP::Config
 i_webp_config_clone(cfg)
 	Imager::File::WEBP::Config cfg
 
+bool
+i_webp_config_update(cfg, im)
+	Imager::File::WEBP::Config cfg
+	Imager im
+
 int
 method(cfg, value = NULL)
 	Imager::File::WEBP::Config cfg
