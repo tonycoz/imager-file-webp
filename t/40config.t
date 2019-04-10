@@ -3,7 +3,7 @@ use strict;
 use Test::More;
 
 use Imager::File::WEBP;
-use Imager::Test qw(test_image is_image_similar);
+use Imager::Test qw(test_image is_image_similar is_image);
 
 my $im = test_image;
 
@@ -38,6 +38,53 @@ pass("hopefully destroyed it");
      "set quality on check image");
   ok($cfg->update($im), "update from new image");
   is($cfg->quality, 90.5, "check update worked");
+}
+
+{
+  my $cfgim = test_image();
+  $cfgim->settag(name => "webp_mode", value => "lossless");
+  my $cfg = Imager::File::WEBP::Config->new($cfgim);
+  ok($cfg, "made a config object asking for lossless");
+  my $data;
+  my $im = test_image();
+  ok($im->write(data => \$data, type => "webp", webp_config => $cfg),
+     "write with config data")
+    or diag $im->errstr;
+  my $cmpim = Imager->new;
+  ok($cmpim->read(data => \$data, type => "webp"),
+     "read it back in ")
+    or diag $im->errstr;
+  is_image($cmpim, $im, "check it really was lossless");
+}
+
+{
+  my $cfg = Imager::File::WEBP::Config->new(webp_mode => "lossless");
+  ok($cfg, "made a config object asking for lossless (no config image visible)");
+  my $data;
+  my $im = test_image();
+  ok($im->write(data => \$data, type => "webp", webp_config => $cfg),
+     "write with config data")
+    or diag $im->errstr;
+  my $cmpim = Imager->new;
+  ok($cmpim->read(data => \$data, type => "webp"),
+     "read it back in ")
+    or diag $im->errstr;
+  is_image($cmpim, $im, "check it really was lossless");
+}
+
+{
+  my $cfg = Imager::File::WEBP::Config->new(webp_mode => "lossless");
+  ok($cfg, "made a config object asking for lossless (no config image visible)");
+  my $data;
+  my $im = test_image();
+  ok(Imager->write_multi({data => \$data, type => "webp", webp_config => $cfg}, $im, $im),
+     "write multi with config data")
+    or diag $im->errstr;
+  my $cmpim = Imager->new;
+  ok($cmpim->read(data => \$data, type => "webp"),
+     "read it back in ")
+    or diag $im->errstr;
+  is_image($cmpim, $im, "check it really was lossless");
 }
 
 done_testing();

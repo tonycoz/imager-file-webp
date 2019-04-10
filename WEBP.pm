@@ -52,7 +52,7 @@ Imager->register_writer
      $im->_set_opts(\%hsh, "i_", $im);
      $im->_set_opts(\%hsh, "webp_", $im);
 
-     unless (i_writewebp($im->{IMG}, $io)) {
+     unless (i_writewebp($im->{IMG}, $io, $hsh{webp_config})) {
        $im->_set_error(Imager->_error_as_msg);
        return;
      }
@@ -65,7 +65,7 @@ Imager->register_writer
      Imager->_set_opts($opts, "webp_", @ims);
 
      my @work = map $_->{IMG}, @ims;
-     my $result = i_writewebp_multi($io, @work);
+     my $result = i_writewebp_multi($io, $opts->{webp_config}, @work);
      unless ($result) {
        $class->_set_error($class->_error_as_msg);
        return;

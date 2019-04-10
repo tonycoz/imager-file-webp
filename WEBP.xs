@@ -10,6 +10,7 @@ extern "C" {
 #include "imwebp.h"
 
 typedef i_webp_config_t *Imager__File__WEBP__Config;
+typedef i_webp_config_t *opt_Imager__File__WEBP__Config;
 
 #define i_webp_config_DESTROY i_webp_config_destroy
 #define i_webp_config_new(cls, im) i_webp_config_create(im)
@@ -44,21 +45,23 @@ i_readwebp_multi(ig)
 
 
 undef_int
-i_writewebp(im, ig)
+i_writewebp(im, ig, cfg = NULL)
     Imager::ImgRaw     im
         Imager::IO     ig
+	opt_Imager::File::WEBP::Config cfg
 
 undef_int
-i_writewebp_multi(ig, ...)
+i_writewebp_multi(ig, cfg, ...)
         Imager::IO     ig
+	opt_Imager::File::WEBP::Config cfg
       PREINIT:
         int i;
         int img_count;
         i_img **imgs;
       CODE:
-        if (items < 2)
+        if (items < 3)
           croak("Usage: i_writewebp_multi(ig, images...)");
-        img_count = items - 1;
+        img_count = items - 2;
         RETVAL = 1;
 	if (img_count < 1) {
 	  RETVAL = 0;
@@ -68,7 +71,7 @@ i_writewebp_multi(ig, ...)
 	else {
           imgs = mymalloc(sizeof(i_img *) * img_count);
           for (i = 0; i < img_count; ++i) {
-	    SV *sv = ST(1+i);
+	    SV *sv = ST(2+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
 	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
@@ -82,7 +85,7 @@ i_writewebp_multi(ig, ...)
             }
 	  }
           if (RETVAL) {
-	    RETVAL = i_writewebp_multi(ig, imgs, img_count);
+	    RETVAL = i_writewebp_multi(ig, imgs, img_count, cfg);
           }
 	  myfree(imgs);
 	}
@@ -95,8 +98,47 @@ i_webp_libversion()
 MODULE = Imager::File::WEBP PACKAGE = Imager::File::WEBP::Config  PREFIX = i_webp_config_
 
 Imager::File::WEBP::Config
-i_webp_config_new(cls, im)
-       Imager im
+i_webp_config_new(cls, ...)
+    CODE:
+	if (items < 2 || items > 2 && (items-1) % 2 != 0) {
+	  Perl_croak(aTHX_ "Usage: Imager::File::WEBP::Config->new(image)\n"
+	                   "or   : Imager::File::WEBP::Config->new(field => value, ...)");
+	}
+	else if (items == 2) {
+	  /* just an image */
+	  SV *imsv = ST(1);
+  	  i_img *im = NULL;
+          if (sv_derived_from(imsv, "Imager") && 
+                 SvTYPE(SvRV(imsv)) == SVt_PVHV) {
+              HV *hv = (HV *)SvRV(imsv);
+              SV **sv = hv_fetch(hv, "IMG", 3, 0);
+              if (sv && *sv && sv_derived_from(*sv, "Imager::ImgRaw")) {
+                  IV tmp = SvIV((SV*)SvRV(*sv));
+                  im = INT2PTR(i_img *,tmp);
+              }
+              else
+                  Perl_croak(aTHX_ "image is not of type Imager::ImgRaw");
+          }
+          else
+              Perl_croak(aTHX_ "image is not of type Imager");
+	  RETVAL = i_webp_config_create(im);
+	}
+	else {
+	  int i;
+	  i_img *im = i_img_8_new(1, 1, 1);
+	  for (i = 1; i < items; i += 2) {
+	    const char *key = SvPV_nolen(ST(i));
+	    STRLEN value_size;
+	    const char *value = SvPV(ST(i+1), value_size);
+	    i_tags_set(&im->tags, key, value, value_size);
+	  }
+
+	  RETVAL = i_webp_config_create(im);
+
+	  i_img_destroy(im);
+	}
+    OUTPUT:
+	RETVAL
 
 void
 i_webp_config_DESTROY(cfg)

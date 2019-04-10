@@ -16,6 +16,8 @@ struct i_webp_config_tag {
 
 static int
 webp_compress_defaults(i_img *im, struct WebPConfig *config);
+static int
+config_update(WebPConfig *cfg, i_img *im);
 
 static unsigned char *
 slurpio(io_glue *ig, size_t *size) {
@@ -281,8 +283,8 @@ i_readwebp_multi(io_glue *ig, int *count) {
 }
 
 undef_int
-i_writewebp(i_img *im, io_glue *ig) {
-  return i_writewebp_multi(ig, &im, 1);
+i_writewebp(i_img *im, io_glue *ig, i_webp_config_t *cfg) {
+  return i_writewebp_multi(ig, &im, 1, cfg);
 }
 
 static const int rgb_chans[4] = { 0, 1, 2, 0 };
@@ -347,7 +349,7 @@ my_webp_writer(const uint8_t* data, size_t data_size,
 }
 
 static int
-frame_webp(i_img *im, io_glue *io) {
+frame_webp(i_img *im, io_glue *io, const i_webp_config_t *basecfg) {
   int chans;
   uint8_t *webp;
   size_t webp_size;
@@ -357,8 +359,15 @@ frame_webp(i_img *im, io_glue *io) {
   WebPPicture pic;
   WebPMemoryWriter writer;
 
-  if (!webp_compress_defaults(im, &config))
-    return 0;
+  if (basecfg) {
+    config = basecfg->cfg;
+    if (!config_update(&config, im))
+      return 0;
+  }
+  else {
+    if (!webp_compress_defaults(im, &config))
+      return 0;
+  }
 
   if (!WebPPictureInit(&pic)) {
     i_push_error(0, "failed to initialize picture");
@@ -393,7 +402,7 @@ frame_webp(i_img *im, io_glue *io) {
 }
 
 undef_int
-i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
+i_writewebp_multi(io_glue *ig, i_img **imgs, int count, i_webp_config_t *cfg) {
   WebPMux *mux;
   int i;
   WebPData outd;
@@ -427,7 +436,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
     WebPData d;
     unsigned char *p;
 
-    if (!frame_webp(imgs[0], bio)) {
+    if (!frame_webp(imgs[0], bio, cfg)) {
       io_glue_destroy(bio);
       goto fail;
     }
@@ -504,7 +513,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 	f.blend_method = WEBP_MUX_BLEND;
       }
       
-      if (!frame_webp(imgs[i], bio)) {
+      if (!frame_webp(imgs[i], bio, cfg)) {
 	io_glue_destroy(bio);
 	goto fail;
       }
@@ -676,7 +685,7 @@ named_ints[] =
     NAMES_END
   };
 
-int
+static int
 config_update(WebPConfig *cfg, i_img *im) {
   WebPConfig work = *cfg;
 
