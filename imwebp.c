@@ -5,6 +5,7 @@
 #include "imext.h"
 #include <errno.h>
 #include <limits.h>
+#include <assert.h>
 
 struct i_webp_config_tag {
   struct WebPConfig cfg;
@@ -12,6 +13,9 @@ struct i_webp_config_tag {
 
 #define START_SLURP_SIZE 8192
 #define next_slurp_size(old) ((size_t)((old) * 3 / 2) + 10)
+
+static int
+webp_compress_defaults(i_img *im, struct WebPConfig *config);
 
 static unsigned char *
 slurpio(io_glue *ig, size_t *size) {
@@ -281,71 +285,111 @@ i_writewebp(i_img *im, io_glue *ig) {
   return i_writewebp_multi(ig, &im, 1);
 }
 
+static const int rgb_chans[4] = { 0, 1, 2, 0 };
 static const int gray_chans[4] = { 0, 0, 0, 1 };
 
-static unsigned char *
-frame_raw(i_img *im, int *out_chans) {
-  unsigned char *data, *p;
-  i_img_dim y;
-  const int *chans = im->channels < 3 ? gray_chans : NULL;
-  *out_chans = (im->channels & 1) ? 3 : 4;
-  data = mymalloc(im->xsize * im->ysize * *out_chans);
-  p = data;
-  for (y = 0; y < im->ysize; ++y) {
-    i_gsamp(im, 0, im->xsize, y, p, chans, *out_chans);
-    p += *out_chans * im->xsize;
-  }
+#define make_argb(a, r, g, b) (((uint32_t)(a) << 24) | ((r) << 16) | ((g) << 8) | (b))
+#define make_argb4(p) make_argb(p[3], p[0], p[1], p[2])
+#define make_argb3(p) make_argb((unsigned char)0xFF, p[0], p[1], p[2])
+#define make_argb2(p) make_argb(p[1], p[0], p[0], p[0])
+#define make_argb1(p) make_argb((unsigned char)0xFF, p[0], p[0], p[0])
 
-  return data;
+static int
+frame_raw_argb(i_img *im, WebPPicture *pic) {
+  unsigned char *row;
+  uint32_t *result, *p;
+  i_color_model_t cm = i_img_color_model(im);
+  i_img_dim x, y;
+  
+  row = mymalloc(im->xsize * cm);
+  p = pic->argb;
+  pic->argb_stride = im->xsize;
+  for (y = 0; y < im->ysize; ++y) {
+    const unsigned char *rp = row;
+    i_gsamp(im, 0, im->xsize, y, row, NULL, cm);
+    for (x = 0; x < im->xsize; ++x) {
+      switch (cm) {
+      case icm_gray:
+	*p++ = make_argb1(rp);
+	break;
+      case icm_gray_alpha:
+	*p++ = make_argb2(rp);
+	break;
+      case icm_rgb:
+	*p++ = make_argb3(rp);
+	break;
+      case icm_rgb_alpha:
+	*p++ = make_argb4(rp);
+	break;
+      default:
+	assert(0);
+	break;
+      }
+      rp += cm;
+    }
+  }
+  myfree(row);
+
+  return 1;
 }
 
-static unsigned char *
-frame_webp(i_img *im, size_t *sz) {
+static int
+my_webp_writer(const uint8_t* data, size_t data_size,
+	       const WebPPicture* picture) {
+  io_glue *io = (io_glue *)picture->custom_ptr;
+
+  if (i_io_write(io, data, data_size) != data_size) {
+    i_push_error(errno, "failed to write");
+    return 0;
+  }
+
+  return 1;
+}
+
+static int
+frame_webp(i_img *im, io_glue *io) {
   int chans;
-  unsigned char *raw = frame_raw(im, &chans);
   uint8_t *webp;
   size_t webp_size;
   char webp_mode[80];
+  WebPConfig config;
   int lossy = 1;
+  WebPPicture pic;
+  WebPMemoryWriter writer;
 
-  if (i_tags_get_string(&im->tags, "webp_mode", 0, webp_mode, sizeof(webp_mode))) {
-    if (strcmp(webp_mode, "lossless") == 0) {
-      lossy = 0;
-    }
-    else if (strcmp(webp_mode, "lossy") != 0) {
-      i_push_error(0, "webp_mode must be 'lossy' or 'lossless'");
-      return NULL;
-    }
+  if (!webp_compress_defaults(im, &config))
+    return 0;
+
+  if (!WebPPictureInit(&pic)) {
+    i_push_error(0, "failed to initialize picture");
+    return 0;
   }
-  if (lossy) {
-    double quality;
-    if (i_tags_get_float(&im->tags, "webp_quality", 0, &quality)) {
-      if (quality < 0 || quality > 100) {
-	i_push_error(0, "webp_quality must be in the range 0 to 100 inclusive");
-	return NULL;
-      }
-    }
-    else {
-      quality = 80;
-    }
-    if (chans == 4) {
-      webp_size = WebPEncodeRGBA(raw, im->xsize, im->ysize, im->xsize * chans, quality, &webp);
-    }
-    else {
-      webp_size = WebPEncodeRGB(raw, im->xsize, im->ysize, im->xsize * chans, quality, &webp);
-    }
+
+  pic.use_argb = 1;
+  pic.width = im->xsize;
+  pic.height = im->ysize;
+  if (!WebPPictureAlloc(&pic)) {
+    i_push_error(0, "picture allocation failed");
+    goto fail;
   }
-  else {
-    if (chans == 4) {
-      webp_size = WebPEncodeLosslessRGBA(raw, im->xsize, im->ysize, im->xsize * chans, &webp);
-    }
-    else {
-      webp_size = WebPEncodeLosslessRGB(raw, im->xsize, im->ysize, im->xsize * chans, &webp);
-    }
-  }
-  *sz = webp_size;
-  myfree(raw);
-  return webp;
+
+  if (!frame_raw_argb(im, &pic))
+    goto fail;
+
+  pic.writer = my_webp_writer;
+  pic.custom_ptr = io;
+
+  if (!WebPEncode(&config, &pic))
+    goto fail;
+
+  i_io_close(io);
+  
+  WebPPictureFree(&pic);
+  return 1;
+
+ fail:
+  WebPPictureFree(&pic);
+  return 0;
 }
 
 undef_int
@@ -379,17 +423,25 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
   }
 
   if (count == 1) {
+    io_glue *bio = io_new_bufchain();
     WebPData d;
-    d.bytes = frame_webp(imgs[0], &d.size);
-    if (!d.bytes)
+    unsigned char *p;
+
+    if (!frame_webp(imgs[0], bio)) {
+      io_glue_destroy(bio);
       goto fail;
+    }
+
+    d.size = io_slurp(bio, &p);
+    d.bytes = p;
+    io_glue_destroy(bio);
 
     if ((err = WebPMuxSetImage(mux, &d, 1)) != WEBP_MUX_OK) {
       i_push_errorf(err, "failed to set image (%d)", (int)err);
-      WebPDataClear(&d);
+      myfree(p);
       goto fail;
     }
-    WebPDataClear(&d);
+    myfree(p);
   }
   else {
     WebPMuxFrameInfo f;
@@ -409,6 +461,8 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
     }
     f.id = WEBP_CHUNK_ANMF;
     for (i = 0; i < count; ++i) {
+      io_glue *bio = io_new_bufchain();
+      unsigned char *p;
       WebPData d;
       char buf[80];
 
@@ -450,12 +504,19 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count) {
 	f.blend_method = WEBP_MUX_BLEND;
       }
       
-      f.bitstream.bytes = frame_webp(imgs[i], &f.bitstream.size);
-      if (!f.bitstream.bytes)
+      if (!frame_webp(imgs[i], bio)) {
+	io_glue_destroy(bio);
+	goto fail;
+      }
+
+      f.bitstream.size = io_slurp(bio, &p);
+      f.bitstream.bytes = p;
+      io_glue_destroy(bio);
+      if (!f.bitstream.size)
 	goto fail;
 
       WebPMuxPushFrame(mux, &f, 1);
-      WebPDataClear(&f.bitstream);
+      myfree(p);
     }
     err = WebPMuxSetAnimationParams(mux, &params);
     if (err != WEBP_MUX_OK) {
@@ -558,7 +619,7 @@ find_map_value(const name_map_entry_t *map, const char *value_name, const char *
     ++map;
   }
 
-  i_push_errorf(0, "Unknown value %s for tag %s", value_name, tag_name);
+  i_push_errorf(0, "Unknown value '%s' for tag %s", value_name, tag_name);
 
   return 0;
 }
@@ -673,7 +734,11 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
     return 0;
 
   if (!i_tags_get_float(&im->tags, "webp_quality", 0, &quality)) {
-    quality = 75.0;
+    quality = 80.0;
+  }
+  if (quality < 0 || quality > 100) {
+    i_push_error(0, "webp_quality must be in the range 0 to 100 inclusive");
+    return 0;
   }
 
   if (!WebPConfigPreset(config, preset, quality)) {
@@ -691,6 +756,9 @@ webp_compress_defaults(i_img *im, struct WebPConfig *config) {
 	i_push_error(0, "failed to configure lossless preset");
 	return 0;
       }
+    }
+    else {
+      config->lossless = 1;
     }
   }
 
