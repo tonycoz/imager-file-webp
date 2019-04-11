@@ -183,6 +183,7 @@ method(cfg, value = NULL)
 	  int ival = SvIV(value);
 	  if (!i_webp_config_setint(cfg, SvPV_nolen(field), ival))
 	    XSRETURN_EMPTY;
+	  RETVAL = 1;
 	}
 	else {
 	  if (!i_webp_config_getint(cfg, SvPV_nolen(field), &RETVAL))
