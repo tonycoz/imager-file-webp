@@ -213,6 +213,161 @@ Default: C<alpha>.
 
 =back
 
+=head2 More complex compression configuration
+
+If you want more control over the work and parameters C<libwebp> uses
+to compress your image, you can supply a several other tags, or
+encapsulate those parameters in a configuration object.
+
+At the simplest level you can just supply parameters to C<<
+$image->write() >> or C<< Imager->write_multi() >>, which are then set
+as tags:
+
+  $im->write(file => "foo.webp", type => "webp", webp_target_size => 10_000);
+
+You can also create a configuration object and supply that:
+
+  my $cfg = Imager::File::WEBP::Config->new(webp_target_size => 10_000);
+  $im->write(file => "foo.webp", type => "webp", webp_config => $cfg);
+
+If you do supply a configuration object then any tags supplied are
+used to modify a copy of the configuration object rather than creating
+a new configuration for the image.  In particular this means that the
+C<webp_preset> parameter/tag will be ignored if you supply
+C<webp_config>.
+
+You can also initialize the configuration object from an image:
+
+  my $cfgim = Imager->new(xsize => 1, ysize => 1);
+  $cfgim->settag(name => "webp_target_size", value => 10_000);
+  my $cfg = Imager::File::WEBP::Config->new($cfgim);
+
+Once you have a configuration object you can fetch or update its members:
+
+  my $old_target_size = $cfg->target_size;
+  $cfg->target_size(20_000);
+
+Note that when called as a setter these methods return a success flag,
+B<not> the old value.
+
+Parameters only available when creating a new configuration object:
+
+=over
+
+=item *
+
+C<webp_preset> - a string that can be any of "default", "picture",
+"photo", "drawing", "icon" or "text".  This adjusts the default values
+for C<sns_strength>, C<filter_sharpness>, C<filter_strength> and
+C<preprocessing>.
+
+=back
+
+Any other value can be supplied as either an initialization parameter
+(with the C<webp_> prefix, or modified or retrieved with an accessor
+on the configuration object (without the C<webp_> prefix.
+
+These are:
+
+=over
+
+=item *
+
+C<webp_quality> - the quality of conversion, a floating point value
+between 0 and 100 inclusive..  This is exactly the same as the simpler
+C<webp_quality> parameter above.
+
+=item *
+
+C<webp_method> - quality/speed trade-off (0=fast, 6=slower-better)
+
+=item *
+
+C<webp_image_hint> - any of C<default>, C<picture>, C<photo>,
+C<graph>.  This is unrelated to C<webp_preset> and it only used for
+lossless compression at this point.  Only C<graph> appears to act any
+differently at this point going by the source.
+
+=item *
+
+C<webp_target_size> - if non-zero, set the desired target size in
+bytes.  Takes precedence over the C<webp_quality> parameter.
+
+=item *
+
+C<webp_target_psnr> - if non-zero, specifies the minimal distortion to
+try to achieve. Takes precedence over C<webp_target_size>.
+
+=item *
+
+C<webp_segments> - maximum number of segments to use, in [1..4].
+
+=item *
+
+C<webp_sns_strength> - Spatial Noise Shaping. Integer 0=off, 100=maximum.
+
+=item *
+
+C<webp_filter_strength> - integer range: [0 = off .. 100 = strongest].
+
+=item *
+
+C<webp_filter_sharpness> - integer range: [0 = off .. 7 = least sharp].
+
+=item *
+
+C<webp_filter_type> - filtering type: integer 0 = simple, 1 = strong
+(only used if filter_strength > 0 or autofilter > 0).
+
+=item *
+
+C<webp_autofilter> - Auto adjust filter's strength [0 = off, 1 = on].
+
+=item *
+
+C<webp_alpha_compression> - Algorithm for encoding the alpha plane (0
+= none, 1 = compressed with WebP lossless). Default is 1.
+
+=item *
+
+C<webp_alpha_filtering> - Predictive filtering method for alpha plane.
+0: none, 1: fast, 2: best. Default is 1.
+
+=item *
+
+C<webp_alpha_quality> Between 0 (smallest size) and 100
+(lossless). Default is 100.
+
+=item *
+
+C<webp_pass> - number of entropy-analysis passes (in [1..10]).
+
+=item *
+
+C<webp_preprocessing> - preprocessing filter (0=none, 1=segment-smooth)
+
+=item *
+
+C<webp_partitions> - log2(number of token partitions) in [0..3].
+Default is set to 0 for easier progressive decoding.
+
+=item *
+
+C<webp_partition_limit> - quality degradation allowed to fit the 512k limit on
+prediction modes coding (0: no degradation, 100: maximum possible degradation).
+
+=item *
+
+C<webp_use_sharp_yuv> - if needed, use sharp (and slow) RGB->YUV conversion.
+
+=back
+
+The above is largely from:
+
+L<https://developers.google.com/speed/webp/docs/api#advanced_encoding_api>
+
+with some typo fixes and adjustments.
+
 =head1 INSTALLATION
 
 To install Imager::File::WEBP you need Imager installed and you need
