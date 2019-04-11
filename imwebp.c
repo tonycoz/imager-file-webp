@@ -490,6 +490,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count, i_webp_config_t *cfg) {
 	}
 	else {
 	  i_push_error(0, "invalid webp_dispose, must be 'none' or 'background'");
+	  io_glue_destroy(bio);
 	  goto fail;
 	}
       }
@@ -506,6 +507,7 @@ i_writewebp_multi(io_glue *ig, i_img **imgs, int count, i_webp_config_t *cfg) {
 	}
 	else {
 	  i_push_error(0, "invalid webp_blend, must be 'none' or 'alpha'");
+	  io_glue_destroy(bio);
 	  goto fail;
 	}
       }
