@@ -92,15 +92,20 @@ i_writewebp_multi(ig, cfg, ...)
       OUTPUT:
         RETVAL
 
+MODULE = Imager::File::WEBP PACKAGE = Imager::File::WEBP  PREFIX = i_webp_
+
 const char *
 i_webp_libversion()
+
+UV
+i_webp_encode_abi_version()
 
 MODULE = Imager::File::WEBP PACKAGE = Imager::File::WEBP::Config  PREFIX = i_webp_config_
 
 Imager::File::WEBP::Config
 i_webp_config_new(cls, ...)
     CODE:
-	if (items < 2 || items > 2 && (items-1) % 2 != 0) {
+	if (items == 0 || items > 2 && (items-1) % 2 != 0) {
 	  Perl_croak(aTHX_ "Usage: Imager::File::WEBP::Config->new(image)\n"
 	                   "or   : Imager::File::WEBP::Config->new(field => value, ...)");
 	}
@@ -175,6 +180,9 @@ method(cfg, value = NULL)
 	Imager::File::WEBP::Config::use_sharp_yuv = 15
 	Imager::File::WEBP::Config::thread_level = 16
 	Imager::File::WEBP::Config::low_memory = 17
+	Imager::File::WEBP::Config::near_lossless = 18
+	Imager::File::WEBP::Config::emulate_jpeg_size = 19
+	Imager::File::WEBP::Config::exact = 19
     PREINIT:
 	SV *field;
     CODE:
@@ -218,7 +226,7 @@ quality(cfg, value = NULL)
         RETVAL
 
 SV *
-hint(cfg, value = NULL)
+image_hint(cfg, value = NULL)
 	Imager::File::WEBP::Config cfg
 	SV *value
     PREINIT:
@@ -226,13 +234,13 @@ hint(cfg, value = NULL)
     CODE:
         if (value) {
 	  const char *val = SvPV_nolen(value);
-	  if (!i_webp_config_set_hint(cfg, val))
+	  if (!i_webp_config_set_image_hint(cfg, val))
 	    XSRETURN_EMPTY;
 	  RETVAL = &PL_sv_yes;
 	}
 	else {
 	  const char *value = 0;
-	  if (!i_webp_config_get_hint(cfg, &value))
+	  if (!i_webp_config_get_image_hint(cfg, &value))
 	    XSRETURN_EMPTY;
 	  RETVAL = newSVpv(value, 0);
 	}

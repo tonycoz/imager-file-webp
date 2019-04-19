@@ -582,6 +582,11 @@ i_webp_libversion(void) {
   return buf;
 }
 
+unsigned
+i_webp_encode_abi_version(void) {
+  return WEBP_ENCODER_ABI_VERSION;
+}
+
 typedef struct {
   const char *name;
   int value;
@@ -677,12 +682,21 @@ named_ints[] =
     INT_ENTRY(preprocessing, 0, 1),
     INT_ENTRY(partitions, 0, 3),
     INT_ENTRY(partition_limit, 0, 100),
-#if WEBP_ENCODER_ABI_VERSION >= 0x20e
-    INT_ENTRY(use_sharp_yuv, 0, 1),
+#if WEBP_ENCODER_ABI_VERSION >= 0x200
+    INT_ENTRY(emulate_jpeg_size, 0, 1),
 #endif
 #if WEBP_ENCODER_ABI_VERSION >= 0x201
     INT_ENTRY(thread_level, 0, 1),
     INT_ENTRY(low_memory, 0, 1),
+#endif
+#if WEBP_ENCODER_ABI_VERSION >= 0x205
+    INT_ENTRY(near_lossless, 0, 100),
+#endif
+#if WEBP_ENCODER_ABI_VERSION >= 0x209
+    INT_ENTRY(exact, 0, 1),
+#endif
+#if WEBP_ENCODER_ABI_VERSION >= 0x20e
+    INT_ENTRY(use_sharp_yuv, 0, 1),
 #endif
     NAMES_END
   };
@@ -693,7 +707,7 @@ config_update(WebPConfig *cfg, i_img *im) {
 
   {
     int hint;
-    if (!find_map_tag(hint_names, im, "webp_hint", &hint, work.image_hint))
+    if (!find_map_tag(hint_names, im, "webp_image_hint", &hint, work.image_hint))
       return 0;
     work.image_hint = hint;
   }
@@ -903,9 +917,9 @@ i_webp_config_setfloat(i_webp_config_t *cfg, const char *name, float value) {
 }
 
 int
-i_webp_config_set_hint(i_webp_config_t *cfg, const char *value) {
+i_webp_config_set_image_hint(i_webp_config_t *cfg, const char *value) {
   int hint;
-  if (!find_map_value(hint_names, value, "webp_hint", &hint, cfg->cfg.image_hint))
+  if (!find_map_value(hint_names, value, "webp_image_hint", &hint, cfg->cfg.image_hint))
     return 0;
  
   cfg->cfg.image_hint = hint;
@@ -914,7 +928,7 @@ i_webp_config_set_hint(i_webp_config_t *cfg, const char *value) {
 }
 
 int
-i_webp_config_get_hint(i_webp_config_t *cfg, const char **value) {
+i_webp_config_get_image_hint(i_webp_config_t *cfg, const char **value) {
   const name_map_entry_t *m = hint_names;
   *value = NULL;
   while (m->name) {
@@ -924,7 +938,7 @@ i_webp_config_get_hint(i_webp_config_t *cfg, const char **value) {
     }
     ++m;
   }
-  i_push_errorf(0, "unknown value %d for webp_hint", (int)cfg->cfg.image_hint);
+  i_push_errorf(0, "unknown value %d for webp_image_hint", (int)cfg->cfg.image_hint);
   return 0;
 }
 

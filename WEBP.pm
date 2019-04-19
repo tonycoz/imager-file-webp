@@ -358,7 +358,37 @@ prediction modes coding (0: no degradation, 100: maximum possible degradation).
 
 =item *
 
-C<webp_use_sharp_yuv> - if needed, use sharp (and slow) RGB->YUV conversion.
+C<webp_emulate_jpeg_size> - If true, compression parameters will be
+remapped to better match the expected output size from JPEG
+compression. Generally, the output size will be similar but the
+degradation will be lower.  Requires encoder ABI version 0x200 or higher.
+
+=item *
+
+C<webp_thread_level> - If non-zero, try and use multi-threaded
+encoding.  Requires encoder ABI version 0x201 or higher.
+
+=item *
+
+C<webp_low_memory> - If set, reduce memory usage (but increase CPU
+use).  Requires encoder ABI version 0x201 or higher.
+
+=item *
+
+C<webp_near_lossless> - Near lossless encoding [0 = max loss .. 100 =
+off (default)].  Requires encoder ABI version 0x205 or higher.
+
+=item *
+
+C<webp_exact> - if non-zero, preserve the exact RGB values under
+transparent area. Otherwise, discard this invisible RGB information
+for better compression. The default value is 0.  Must be 0 or 1.
+Requires encoder ABI version 0x209.
+
+=item *
+
+C<webp_use_sharp_yuv> - if needed, use sharp (and slow) RGB->YUV
+conversion.  Requires encoder ABI version 0x20e or higher.
 
 =back
 
