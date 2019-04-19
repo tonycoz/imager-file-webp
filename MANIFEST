@@ -10,6 +10,7 @@ t/00use.t
 t/10version.t
 t/20write.t
 t/30read.t
+t/40config.t
 t/90pod.t
 t/lib/TestImage.pm
 testimg/anim.webp
@@ -17,5 +18,6 @@ testimg/exif.webp
 testimg/lossless.webp
 testimg/simpalpha.webp
 testimg/simple.webp
+typemap
 WEBP.pm
 WEBP.xs
