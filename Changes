@@ -11,6 +11,9 @@
    triggered, and can't be a security issue.
    https://rt.cpan.org/Ticket/Display.html?id=128953
 
+ - significantly extend the options available for compression.
+   I now use the advanced encoding API.
+
 Imager-File-WEBP 0.004 - 14 Feb 2019
 ======================
 
