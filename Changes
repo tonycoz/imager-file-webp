@@ -1,3 +1,6 @@
+Imager-File-WEBP 0.005 - 19 Apr 2019
+======================
+
  - minor whitespace fixups.
    The reporter supplied a patch, but it was excessive.
    https://rt.cpan.org/Ticket/Display.html?id=128954
