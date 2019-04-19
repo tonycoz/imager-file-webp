@@ -398,6 +398,12 @@ L<https://developers.google.com/speed/webp/docs/api#advanced_encoding_api>
 
 with some typo fixes and adjustments.
 
+=over
+
+=item Imager::File::WEBP::encoder_abi_version() - returns the encoder ABI version.
+
+=back
+
 =head1 INSTALLATION
 
 To install Imager::File::WEBP you need Imager installed and you need
